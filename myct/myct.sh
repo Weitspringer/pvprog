@@ -1,42 +1,59 @@
 #!/bin/bash
 
+declare -r SCRIPT_MODE="$1"
+declare -r CONTAINER_PATH="$2"
+declare -r HOST_PATH="$3"
+declare -r TARGET_PATH="$2$4"
+
+
 echo "Starting program at $(date)" # Date will be substituted
 
 echo "Running program $0 with $# arguments with pid $$"
 
 # Script has to be executed with admin privileges
 
-case $1 in
+case $SCRIPT_MODE in
     init)
         # Setup a root file system using debootstrap
         # myct init <container-path>
         # Check requirements
-        if [ $# = 2 ]; then
+        if [ $# = 2 ]; 
+        then            
             REQUIRED_PKG="debootstrap"
             PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
             echo Checking for $REQUIRED_PKG
-            if [ "" = "$PKG_OK" ]; then
+            if [ "" = "$PKG_OK" ]; 
+            then
                 echo "No $REQUIRED_PKG. Setting up $REQUIRED_PKG."
                 sudo apt-get -y install $REQUIRED_PKG
-                else
+            else
                 echo "$REQUIRED_PKG already installed. Proceeding..."
             fi
-            # Read container path argument and install Debian root file system
-            echo "Installing container in $(cd "$(dirname "$2")"; pwd)/$(basename "$2")"
-            [ -f $2 ] && mkdir $2
-            sudo debootstrap stable $2 http://deb.debian.org/debian
+
+            # Check if container path exists
+            if [ ! -d $CONTAINER_PATH ] 
+            then
+                echo "$CONTAINER_PATH not found. Setting up $CONTAINER_PATH."
+                mkdir -p "$CONTAINER_PATH" 
             else
+                echo "$CONTAINER_PATH found. Proceeding..."
+            fi
+
+            # Read container path argument and install Debian root file system
+            echo "Installing container in: $CONTAINER_PATH..."
+            sudo debootstrap stable $CONTAINER_PATH http://deb.debian.org/debian
+        else
             echo "Wrong number of arguments. Usage of init: myct init <container-path>"
         fi
         ;;
     map)
         # Map host directories read-only into container
         # myct map <container-path> <host-path> <target-path>
-        TARGET_PATH="$2/$4"
-        [ -f TARGET_PATH ] && mkdir TARGET_PATH
-        mount -r --bind $3 TARGET_PATH
+        [ ! -d $TARGET_PATH ] && mkdir -p "$TARGET_PATH" 
+        mount -r --bind "$HOST_PATH" "$TARGET_PATH"
         ;;
     run)
+        echo "$@"
         # Transform long options to short ones
         for arg in "$@"; do
             shift
@@ -46,22 +63,25 @@ case $1 in
                 *)        set -- "$@" "$arg"
             esac
         done
+
+        echo "$@"
+
+        optstring="n:l:"
+        echo "${optstring}"
+
+        OPTIND=2    # set index 2 since the first parameter is then mode, in this case "run"
         while getopts ${optstring} arg; do
             case ${arg} in
-                n)
-                echo "Namespace"
-                ;;
-                l)
-                echo "Limit"
-                ;;
-                *) 
-                echo "Unkown option"
-                ;;
+                n) echo "Namespace: ${OPTARG}" ;;
+                l) echo "Limit: ${OPTARG}" ;;
+                ?) echo "Unkown option: -${OPTARG}" ;;
             esac
         done
+        shift $(($OPTIND - 1))
+        printf "Remaining arguments are: %s\n$*"
         ;;
     *)
-        echo Unknown command "$1"
+        echo "Unknown command $SCRIPT_MODE"
         ;;
 esac
 
@@ -100,3 +120,9 @@ esac
 #unshare -p -f chroot <container-path>
 # Mount
 #mount -t proc proc /proc
+
+
+# some links regarding bash
+# https://www.cyberciti.biz/faq/bash-check-if-file-does-not-exist-linux-unix/
+# https://koenwoortman.com/bash-script-constants/
+# https://www.man7.org/linux/man-pages/man1/getopts.1p.html
