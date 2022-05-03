@@ -1,4 +1,5 @@
 #!/bin/bash
+
 echo "Starting program at $(date)" # Date will be substituted
 
 echo "Running program $0 with $# arguments with pid $$"
@@ -29,10 +30,35 @@ case $1 in
         fi
         ;;
     map)
-        echo map
+        # Map host directories read-only into container
+        # myct map <container-path> <host-path> <target-path>
+        TARGET_PATH="$2/$4"
+        [ -f TARGET_PATH ] && mkdir TARGET_PATH
+        mount -r --bind $3 TARGET_PATH
         ;;
     run)
-        echo run
+        # Transform long options to short ones
+        for arg in "$@"; do
+            shift
+            case "$arg" in
+                "--namespace") set -- "$@" "-n" ;;
+                "--limit") set -- "$@" "-l" ;;
+                *)        set -- "$@" "$arg"
+            esac
+        done
+        while getopts ${optstring} arg; do
+            case ${arg} in
+                n)
+                echo "Namespace"
+                ;;
+                l)
+                echo "Limit"
+                ;;
+                *) 
+                echo "Unkown option"
+                ;;
+            esac
+        done
         ;;
     *)
         echo Unknown command "$1"
