@@ -72,13 +72,32 @@ case $SCRIPT_MODE in
         OPTIND=2    # set index 2 since the first parameter is then mode, in this case "run"
         while getopts ${optstring} arg; do
             case ${arg} in
-                n) echo "Namespace: ${OPTARG}" ;;
-                l) echo "Limit: ${OPTARG}" ;;
+                n) echo "Namespace: ${OPTARG}"
+                namespaceArray=(${${OPTARG}//=/ }) # split string in array by delimiter: '='
+                KIND="${arrIN[0]}"
+                PID="${arrIN[1]}" ;;
+                l) echo "Limit: ${OPTARG}" 
+                limitArray=(${${OPTARG}//=/ }) # split string in array by delimiter: '='
+                CONTROLLER_KEY="${arrIN[0]}"
+                VALUE="${arrIN[1]}" ;;
                 ?) echo "Unkown option: -${OPTARG}" ;;
             esac
         done
         shift $(($OPTIND - 1))
         printf "Remaining arguments are: %s\n$*"
+        case $KIND in
+            mount) unshare -m -f chroot $CONTAINER_PATH ;;
+            uts) unshare -u -f chroot $CONTAINER_PATH ;;
+            ipc) unshare -i -f chroot $CONTAINER_PATH ;;
+            network) unshare -n -f chroot $CONTAINER_PATH ;;
+            pid) unshare -p -f chroot $CONTAINER_PATH ;;
+            cgroup) unshare -C -f chroot $CONTAINER_PATH ;;
+            user) unshare -U -f chroot $CONTAINER_PATH ;;
+            time) unshare -T -f chroot $CONTAINER_PATH ;;
+            ?) echo "Unknown namespace type: $KIND";;
+
+
+        ls -l "$CONTAINER_PATH/proc"
         ;;
     *)
         echo "Unknown command $SCRIPT_MODE"
