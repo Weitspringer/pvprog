@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source "./myct_run_limits.sh"
+
 declare -r SCRIPT_MODE="$1"
 declare -r CONTAINER_PATH="$2"
 declare -r HOST_PATH="$3"
@@ -31,10 +33,10 @@ case $SCRIPT_MODE in
             fi
 
             # Check if container path exists
-            if [ ! -d $CONTAINER_PATH ] 
+            if [ ! -d $CONTAINER_PATH ]
             then
                 echo "$CONTAINER_PATH not found. Setting up $CONTAINER_PATH."
-                mkdir -p "$CONTAINER_PATH" 
+                mkdir -p "$CONTAINER_PATH"
             else
                 echo "$CONTAINER_PATH found. Proceeding..."
             fi
@@ -49,10 +51,16 @@ case $SCRIPT_MODE in
     map)
         # Map host directories read-only into container
         # myct map <container-path> <host-path> <target-path>
-        [ ! -d $TARGET_PATH ] && mkdir -p "$TARGET_PATH" 
+        [ ! -d $TARGET_PATH ] && mkdir -p "$TARGET_PATH"
         mount -r --bind "$HOST_PATH" "$TARGET_PATH"
         ;;
     run)
+        # Run file executable in container with passed arguments
+        # myct run <container-path> [options] <executable> [args...]
+        # Options: --namespace <kind>=<pid> --limit <controller.key>=<value>
+
+        CONTAINER_PATH="$2"
+
         echo "$@"
         # Transform long options to short ones
         for arg in "$@"; do
@@ -73,31 +81,40 @@ case $SCRIPT_MODE in
         while getopts ${optstring} arg; do
             case ${arg} in
                 n) echo "Namespace: ${OPTARG}"
-                namespaceArray=(${${OPTARG}//=/ }) # split string in array by delimiter: '='
-                KIND="${arrIN[0]}"
-                PID="${arrIN[1]}" ;;
+                namespaceArray=(${OPTARG//=/ }) # split string in array by delimiter: '='
+                KIND="${namespaceArray[0]}"
+                PID="${namespaceArray[1]}" ;;
                 l) echo "Limit: ${OPTARG}" 
-                limitArray=(${${OPTARG}//=/ }) # split string in array by delimiter: '='
-                CONTROLLER_KEY="${arrIN[0]}"
-                VALUE="${arrIN[1]}" ;;
+                limitArray=(${OPTARG//=/ }) # split string in array by delimiter: '='
+                CONTROLLER_KEY="${limitArray[0]}"
+                VALUE="${limitArray[1]}" ;;
                 ?) echo "Unkown option: -${OPTARG}" ;;
             esac
         done
         shift $(($OPTIND - 1))
         printf "Remaining arguments are: %s\n$*"
+        echo "$OPTIND"
+        mount unshare -p -f --mount-proc chroot $CONTAINER_PATH
         case $KIND in
-            mount) unshare -m -f chroot $CONTAINER_PATH ;;
-            uts) unshare -u -f chroot $CONTAINER_PATH ;;
-            ipc) unshare -i -f chroot $CONTAINER_PATH ;;
-            network) unshare -n -f chroot $CONTAINER_PATH ;;
-            pid) unshare -p -f chroot $CONTAINER_PATH ;;
-            cgroup) unshare -C -f chroot $CONTAINER_PATH ;;
-            user) unshare -U -f chroot $CONTAINER_PATH ;;
-            time) unshare -T -f chroot $CONTAINER_PATH ;;
+            mount) nsenter -m -t $PID;;
+            # Programm ausführen? <path-to-executable> <options>
+            # example from man page: unshare --fork --pid --mount-proc <program name> <proc-mount-point>
+            uts) nsenter -u -t $PID;;
+            ipc) nsenter -i -t $PID;;
+            network) nsenter -n-t $PID;;
+            pid) nsenter -p -t $PID;;
+            cgroup) nsenter -C -t $PID;;
+            user) nsenter -U -t $PID;;
+            time) nsenter -T -t $PID;;
             ?) echo "Unknown namespace type: $KIND";;
+        esac
+        
 
+        # limit container resources
+        # myct_run_limits::limit $controller $key $value
 
-        ls -l "$CONTAINER_PATH/proc"
+        # apply limits on container
+        # myct_run_limits::add_process $controller $$
         ;;
     *)
         echo "Unknown command $SCRIPT_MODE"
