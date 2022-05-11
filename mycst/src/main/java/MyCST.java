@@ -100,7 +100,8 @@ public class MyCST {
         String urlSubstring = "https://drive.google.com/file/d/";
         System.out.println(urlSubstring + fileID);
 
-        // End the Program with Status Code 0
+        // Keep console open until enter-key is pressed and end the program with status code 0
+        System.in.read();
         System.exit(0);
     }
 
