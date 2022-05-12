@@ -4,8 +4,6 @@ source "./myct_run_limits.sh"
 
 declare -r SCRIPT_MODE="$1"
 declare -r CONTAINER_PATH="$2"
-declare -r HOST_PATH="$3"
-declare -r TARGET_PATH="$2$4"
 
 
 echo "Starting program at $(date)" # Date will be substituted
@@ -49,6 +47,9 @@ case $SCRIPT_MODE in
         fi
         ;;
     map)
+        declare -r HOST_PATH="$3"
+        declare -r TARGET_PATH="$2$4"
+
         # Map host directories read-only into container
         # myct map <container-path> <host-path> <target-path>
         [ ! -d $TARGET_PATH ] && mkdir -p "$TARGET_PATH"
@@ -58,8 +59,6 @@ case $SCRIPT_MODE in
         # Run file executable in container with passed arguments
         # myct run <container-path> [options] <executable> [args...]
         # Options: --namespace <kind>=<pid> --limit <controller.key>=<value>
-
-        CONTAINER_PATH="$2"
 
         echo "$@"
         # Transform long options to short ones
