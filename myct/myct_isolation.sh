@@ -18,7 +18,7 @@ myct_isolation::_in_entered_namespace() {
         cgroup) nsenter --target $pid -C unshare --fork --root=$rootfs --mount-proc ;;
         user) nsenter --target $pid -U unshare --fork --root=$rootfs --mount-proc ;;
         time) nsenter --target $pid -T unshare --fork --root=$rootfs --mount-proc ;;
-        all) nsenter --target $pid -m -p unshare --fork --root=$rootfs --mount-proc ;;
-        ?) echo "Unknown namespace type: $KIND. Possible types: mount, uts, ipc, network, pid, cgroup, user, time.";;
+        default) nsenter --target $pid -m -p unshare --fork --root=$rootfs --mount-proc ;;
+        ?) echo "Unknown namespace type: $KIND. Possible types: mount, uts, ipc, network, pid, cgroup, user, time, and default.";;
     esac
 }
