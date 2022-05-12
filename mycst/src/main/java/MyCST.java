@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 
 /* class to demonstrate use of Drive files list API */
 public class MyCST {
@@ -83,14 +84,24 @@ public class MyCST {
                 .build();
 
         // Choose a file through the file explorer
-        FileDialog fileDialog = new FileDialog((Frame) null, "Select File to Open");
-        fileDialog.setMode(FileDialog.LOAD);
-        fileDialog.setVisible(true);
-        String localDirectory = fileDialog.getDirectory();
-        String localFile = fileDialog.getFile();
+        String localFilePath;
+        if (!GraphicsEnvironment.isHeadless()) {
+            // Choose a file through the file explorer if avaiable
+            FileDialog fileDialog = new FileDialog((Frame) null, "Select File to Open");
+            fileDialog.setMode(FileDialog.LOAD);
+            fileDialog.setVisible(true);
+            String localDirectory = fileDialog.getDirectory();
+            String localFile = fileDialog.getFile();
+            localFilePath = localDirectory + localFile;
+        } else {
+            // Enter file path if there's no GUI available
+            System.out.println("Please enter the filepath to the file you would like to upload: ");
+            Scanner in = new Scanner(System.in);
+            localFilePath = in.nextLine();
+        }
 
         // Upload the file
-        String fileID = uploadFile(localDirectory + localFile, service);
+        String fileID = uploadFile(localFilePath, service);
 
         // Make the file publicly visible
         Permission permission = new Permission().setType("anyone").setRole("reader");
