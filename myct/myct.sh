@@ -4,8 +4,8 @@ source "./myct_run_limits.sh"
 source "myct_isolation.sh"
 
 declare -r SCRIPT_MODE="$1"
-declare -r CONTAINER_PATH=$(readlink -f $2)
-
+# declare -r CONTAINER_PATH=$(readlink -f $2)
+declare -r CONTAINER_PATH="$2"
 
 
 echo "Starting program at $(date)" # Date will be substituted
@@ -77,30 +77,45 @@ case $SCRIPT_MODE in
         OPTIND=3    # set index 2 since the first parameter is then mode, in this case "run"
         while getopts ${optstring} arg; do
             case ${arg} in
-                n) echo "Namespace: ${OPTARG}"
-                namespaceArray=(${OPTARG//=/ }) # split string in array by delimiter: '='
-                KIND="${namespaceArray[0]}"
-                PID="${namespaceArray[1]}" ;;
-                l) echo "Limit: ${OPTARG}" 
-                limitArray=(${OPTARG//=/ }) # split string in array by delimiter: '='
-                CONTROLLER_KEY="${limitArray[0]}"
-                VALUE="${limitArray[1]}" ;;
+                n) 
+                    echo "Namespace: ${OPTARG}"
+                    namespaceArray=(${OPTARG//=/ }) # split string in array by delimiter: '='
+                    KIND="${namespaceArray[0]}"
+                    PID="${namespaceArray[1]}" 
+                    ;;
+                l) 
+                    echo "Limit: ${OPTARG}" 
+                    limitArray=(${OPTARG//=/ }) # split string in array by delimiter: '='
+                    CONTROLLER_KEY="${limitArray[0]}"
+                    VALUE="${limitArray[1]}"
+                    limitArray=(${CONTROLLER_KEY//./ }) # split string in array by delimiter: '.'
+                    CONTROLLER="${limitArray[0]}"
+                    KEY="${limitArray[0]}"
+                    ;;
                 ?) echo "Unkown option: -${OPTARG}" ;;
             esac
         done
         shift $(($OPTIND - 1))
-        printf "Remaining arguments are: %s\n$*"
-        echo "$OPTIND"
+        printf "Remaining arguments are: %s\n$*\n"
+        EXECUTABLE=$1
         # If --namespace option is given, the user wants the process running in the container to join the namespace of another process in a container
         # Check: If no --namespace option is given, create new namespace with 'unshare --fork --root="$CONTAINER_PATH" --mount-proc="$CONTAINER_PATH/proc"'
         if [ -v KIND ] && [ -v PID ];
         then
-        echo "enter namespace"
-        myct_isolation::_in_entered_namespace $CONTAINER_PATH $KIND $PID "/bin/bash";
+            echo "enter namespace"
+            myct_isolation::_in_entered_namespace $CONTAINER_PATH $KIND $PID "/bin/bash";
         else
-        echo "new namespace"
-        myct_isolation::_in_new_namespace $CONTAINER_PATH "/bin/bash";
+            echo "new namespace"
+            myct_isolation::_in_new_namespace $CONTAINER_PATH "/bin/bash";
         fi
+
+        # apply resource management
+        myct_run_limits::limit $CONTROLLER $KEY $VALUE
+        myct_run_limits::add_process $CONTROLLER $$
+
+        # run given process in our container
+        echo "let's run the executable: $EXECUTABLE"
+        eval $EXECUTABLE
         ;;
     *)
         echo "Unknown command $SCRIPT_MODE"
