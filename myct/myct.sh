@@ -1,9 +1,11 @@
 #!/bin/bash
 
 source "./myct_run_limits.sh"
+source "myct_isolation.sh"
 
 declare -r SCRIPT_MODE="$1"
-declare -r CONTAINER_PATH="$2"
+declare -r CONTAINER_PATH=$(readlink -f $2)
+
 
 
 echo "Starting program at $(date)" # Date will be substituted
@@ -56,10 +58,6 @@ case $SCRIPT_MODE in
         mount -r --bind "$HOST_PATH" "$TARGET_PATH"
         ;;
     run)
-        # Run file executable in container with passed arguments
-        # myct run <container-path> [options] <executable> [args...]
-        # Options: --namespace <kind>=<pid> --limit <controller.key>=<value>
-
         echo "$@"
         # Transform long options to short ones
         for arg in "$@"; do
@@ -76,7 +74,7 @@ case $SCRIPT_MODE in
         optstring="n:l:"
         echo "${optstring}"
 
-        OPTIND=2    # set index 2 since the first parameter is then mode, in this case "run"
+        OPTIND=3    # set index 2 since the first parameter is then mode, in this case "run"
         while getopts ${optstring} arg; do
             case ${arg} in
                 n) echo "Namespace: ${OPTARG}"
@@ -93,27 +91,16 @@ case $SCRIPT_MODE in
         shift $(($OPTIND - 1))
         printf "Remaining arguments are: %s\n$*"
         echo "$OPTIND"
-        mount unshare -p -f --mount-proc chroot $CONTAINER_PATH
-        case $KIND in
-            mount) nsenter -m -t $PID;;
-            # Programm ausführen? <path-to-executable> <options>
-            # example from man page: unshare --fork --pid --mount-proc <program name> <proc-mount-point>
-            uts) nsenter -u -t $PID;;
-            ipc) nsenter -i -t $PID;;
-            network) nsenter -n-t $PID;;
-            pid) nsenter -p -t $PID;;
-            cgroup) nsenter -C -t $PID;;
-            user) nsenter -U -t $PID;;
-            time) nsenter -T -t $PID;;
-            ?) echo "Unknown namespace type: $KIND";;
-        esac
-        
-
-        # limit container resources
-        # myct_run_limits::limit $controller $key $value
-
-        # apply limits on container
-        # myct_run_limits::add_process $controller $$
+        # If --namespace option is given, the user wants the process running in the container to join the namespace of another process in a container
+        # Check: If no --namespace option is given, create new namespace with 'unshare --fork --root="$CONTAINER_PATH" --mount-proc="$CONTAINER_PATH/proc"'
+        if [ -v KIND ] && [ -v PID ];
+        then
+        echo "enter namespace"
+        myct_isolation::_in_entered_namespace $CONTAINER_PATH $KIND $PID "/bin/bash";
+        else
+        echo "new namespace"
+        myct_isolation::_in_new_namespace $CONTAINER_PATH "/bin/bash";
+        fi
         ;;
     *)
         echo "Unknown command $SCRIPT_MODE"
