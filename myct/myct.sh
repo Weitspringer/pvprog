@@ -1,10 +1,11 @@
 #!/bin/bash
 
 declare -r SCRIPT_MODE="$1"
-declare -r CONTAINER_PATH="$2"
+declare -r CONTAINER_PATH=$(readlink -f $2)
 declare -r HOST_PATH="$3"
 declare -r TARGET_PATH="$2$4"
 
+source "myct_isolation.sh"
 
 echo "Starting program at $(date)" # Date will be substituted
 
@@ -69,35 +70,33 @@ case $SCRIPT_MODE in
         optstring="n:l:"
         echo "${optstring}"
 
-        OPTIND=2    # set index 2 since the first parameter is then mode, in this case "run"
+        OPTIND=3    # set index 2 since the first parameter is then mode, in this case "run"
         while getopts ${optstring} arg; do
             case ${arg} in
                 n) echo "Namespace: ${OPTARG}"
-                namespaceArray=(${${OPTARG}//=/ }) # split string in array by delimiter: '='
-                KIND="${arrIN[0]}"
-                PID="${arrIN[1]}" ;;
+                namespaceArray=(${OPTARG//=/ }) # split string in array by delimiter: '='
+                KIND="${namespaceArray[0]}"
+                PID="${namespaceArray[1]}" ;;
                 l) echo "Limit: ${OPTARG}" 
-                limitArray=(${${OPTARG}//=/ }) # split string in array by delimiter: '='
-                CONTROLLER_KEY="${arrIN[0]}"
-                VALUE="${arrIN[1]}" ;;
+                limitArray=(${OPTARG//=/ }) # split string in array by delimiter: '='
+                CONTROLLER_KEY="${limitArray[0]}"
+                VALUE="${limitArray[1]}" ;;
                 ?) echo "Unkown option: -${OPTARG}" ;;
             esac
         done
         shift $(($OPTIND - 1))
         printf "Remaining arguments are: %s\n$*"
-        case $KIND in
-            mount) unshare -m -f chroot $CONTAINER_PATH ;;
-            uts) unshare -u -f chroot $CONTAINER_PATH ;;
-            ipc) unshare -i -f chroot $CONTAINER_PATH ;;
-            network) unshare -n -f chroot $CONTAINER_PATH ;;
-            pid) unshare -p -f chroot $CONTAINER_PATH ;;
-            cgroup) unshare -C -f chroot $CONTAINER_PATH ;;
-            user) unshare -U -f chroot $CONTAINER_PATH ;;
-            time) unshare -T -f chroot $CONTAINER_PATH ;;
-            ?) echo "Unknown namespace type: $KIND";;
-
-
-        ls -l "$CONTAINER_PATH/proc"
+        echo "$OPTIND"
+        # If --namespace option is given, the user wants the process running in the container to join the namespace of another process in a container
+        # Check: If no --namespace option is given, create new namespace with 'unshare --fork --root="$CONTAINER_PATH" --mount-proc="$CONTAINER_PATH/proc"'
+        if [ -v KIND ] && [ -v PID ]; 
+        then 
+        echo "enter namespace"
+        myct_isolation::_in_entered_namespace $CONTAINER_PATH $KIND $PID "/bin/bash"; 
+        else 
+        echo "new namespace"
+        myct_isolation::_in_new_namespace $CONTAINER_PATH "/bin/bash"; 
+        fi
         ;;
     *)
         echo "Unknown command $SCRIPT_MODE"
