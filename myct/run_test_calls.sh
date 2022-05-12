@@ -18,7 +18,7 @@ chmod u+x myct_run_limits.sh
 
 controller="memory"
 key="limit_in_bytes"
-value="50M"
+value="10M"
 
 echo "limit container resources"
 # limit container resources
