@@ -27,13 +27,14 @@ value="10M"
 # test: limit cpu
 controller="cpu"
 key="cfs_quota_us"
-value="200000"
+value=$(cat /sys/fs/cgroup/cpu/myct/cpu.cfs_period_us * 0.2)
 ./myct.sh run $CONTAINER_PATH -n "test-ns" -l "$controller.$key=$value" $MAP_TARGET/cpu_test.sh
 
-
-./myct.sh unmap $CONTAINER_PATH $MAP_TARGET
+ps u -C cpu_test.sh
+# ./myct.sh unmap $CONTAINER_PATH $MAP_TARGET
 
 chmod u-x test/memory_test.sh
 chmod u-x test/cpu_test.sh
 chmod u-x myct_run_limits.sh
 chmod u-x myct.sh
+

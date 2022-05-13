@@ -122,7 +122,7 @@ case $SCRIPT_MODE in
 
         # run given process in our container
         echo "let's run the executable: $EXECUTABLE"
-        eval $EXECUTABLE
+        exec $EXECUTABLE &
         ;;
     *)
         echo "Unknown command $SCRIPT_MODE"
