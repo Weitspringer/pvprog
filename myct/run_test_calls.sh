@@ -3,7 +3,7 @@
 source "./myct_run_limits.sh"
 source "./myct_isolation.sh"
 
-declare -r CONTAINER_PATH=./container/myct
+declare -r CONTAINER_PATH=./container
 declare -r MAP_SOURCE=./test
 declare -r MAP_TARGET=/opt/workspace
 
@@ -19,16 +19,16 @@ chmod u+x test/cpu_test.sh
 controller="memory"
 key="limit_in_bytes"
 value="10M"
-./myct.sh run $CONTAINER_PATH --namespace "test-ns" --limit "$controller.$key=$value" $MAP_TARGET/memory_test.sh
+./myct.sh run $CONTAINER_PATH --limit "$controller.$key=$value" $MAP_TARGET/memory_test.sh
 
 # test: unknown option
-./myct.sh run $CONTAINER_PATH -n "test-ns" -m -l "$controller.$key=$value" $MAP_TARGET/memory_test.sh
+./myct.sh run $CONTAINER_PATH -m -l "$controller.$key=$value" $MAP_TARGET/memory_test.sh
 
 # test: limit cpu
 controller="cpu"
 key="cfs_quota_us"
-value=$(cat /sys/fs/cgroup/cpu/myct/cpu.cfs_period_us * 0.2)
-./myct.sh run $CONTAINER_PATH -n "test-ns" -l "$controller.$key=$value" $MAP_TARGET/cpu_test.sh
+value=$(echo "$(cat /sys/fs/cgroup/cpu/myct/cpu.cfs_period_us) * 0.2" | bc -l)
+./myct.sh run $CONTAINER_PATH -l "$controller.$key=$value" $MAP_TARGET/cpu_test.sh
 
 ps u -C cpu_test.sh
 # ./myct.sh unmap $CONTAINER_PATH $MAP_TARGET

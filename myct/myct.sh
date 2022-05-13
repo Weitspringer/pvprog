@@ -104,25 +104,20 @@ case $SCRIPT_MODE in
         done
         shift $(($OPTIND - 1))
         printf "Remaining arguments are: %s\n$*\n"
-        EXECUTABLE=$CONTAINER_PATH$1
+        # apply resource management
+        myct_run_limits::limit $CONTROLLER $KEY $VALUE
+        myct_run_limits::add_process $CONTROLLER $$
+        EXECUTABLE=$1
         # If --namespace option is given, the user wants the process running in the container to join the namespace of another process in a container
         # Check: If no --namespace option is given, create new namespace with 'unshare --fork --root="$CONTAINER_PATH" --mount-proc="$CONTAINER_PATH/proc"'
         if [ -v KIND ] && [ -v PID ];
         then
             echo "enter namespace: $KIND for process: $PID"
-            myct_isolation::in_entered_namespace $CONTAINER_PATH $KIND $PID "/bin/bash";
+            myct_isolation::in_entered_namespace $CONTAINER_PATH $KIND $PID $EXECUTABLE;
         else
             echo "new namespace"
-            myct_isolation::in_new_namespace $CONTAINER_PATH "/bin/bash";
+            myct_isolation::in_new_namespace $CONTAINER_PATH $EXECUTABLE;
         fi
-
-        # apply resource management
-        myct_run_limits::limit $CONTROLLER $KEY $VALUE
-        myct_run_limits::add_process $CONTROLLER $$
-
-        # run given process in our container
-        echo "let's run the executable: $EXECUTABLE"
-        exec $EXECUTABLE &
         ;;
     *)
         echo "Unknown command $SCRIPT_MODE"
