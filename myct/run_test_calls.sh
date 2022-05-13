@@ -24,7 +24,7 @@ value=${value%.*}
 sleep 10
 
 ps u -C cpu_test.sh
-# ./myct.sh unmap $CONTAINER_PATH $MAP_TARGET
+./myct.sh unmap $CONTAINER_PATH $MAP_TARGET
 
 chmod u-x test/cpu_test.sh
 chmod u-x myct_run_limits.sh

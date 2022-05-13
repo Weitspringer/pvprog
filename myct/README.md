@@ -23,3 +23,8 @@ The possible options are:
 Proper clean-up and deletion of the container has to be done manually, as this was not part of the excercise. 
 
 The test cases provided only test the limit option.
+
+To run the test setup as submitted via script output:
+```
+    sudo ./run_test_calls.sh
+```
