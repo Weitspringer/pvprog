@@ -1,6 +1,6 @@
 # Welcome to myct!
 
-This is a minimal container runtime written as a shell script. It is able to setup a root file system using debootstrap, allows existing host directories to be mapped read-only and limit filesystem access. Myct can create a minimal kernel namespace to prevent signals to be send to other processes outside of the container. New processes in the container are able to join existing namespaces and ressource usage like memeory and cpu can be limited.
+This is a minimal container runtime written as a shell script. It is able to setup a root file system using debootstrap, allows existing host directories to be mapped read-only and limit filesystem access. Myct can create a minimal kernel namespace to prevent signals to be send to other processes outside of the container. New processes in the container are able to join existing namespaces and ressource usage, like memory and CPU, can be limited.
 
 Firstly, execute the following create a container in any given directoy:
 
@@ -14,7 +14,7 @@ After that, mount a host directory read-only into the container at the given des
 
     $ myct run <container-path> [options] <executable> [args...]
 
-The run command can be executed with options. If "--namespace" is not specified, there will be a new namespace created with the container. If you specify a namespace you have to know the PID of the process already running in the isolated container.
+The run command can be executed with options. If "--namespace" is not specified, there will be a new namespace created with the container. If you specify a namespace you have to know the PID of the process already running in another isolated container.
 The possible options are:
 
     --namespace <kind>=<pid>
