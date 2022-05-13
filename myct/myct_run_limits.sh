@@ -7,7 +7,7 @@ myct_run_limits::set_cgroup_version(){
     local v1=$(mount -l | grep -c cgroup)
     local v2=$(mount -l | grep -c cgroup2)
 
-    echo "anzahl v1: $v1, anzahl v2: $v2"
+    echo "anzahl chgroup v1 mounts: $v1, anzahl v2 mounts: $v2"
 
     # we will go with cgroups v1 only
 
@@ -54,7 +54,7 @@ myct_run_limits::_create_cgroup(){
     if [ ! -d "$path" ];
     then
         sudo mkdir -p "$path"
-        echo "cgroup created"
+        echo "cgroup $path created"
     fi
 }
 
@@ -76,8 +76,7 @@ myct_run_limits::_move_process_to_cgroup(){
     local -r controller=$2
     local -r path=$(myct_run_limits::_get_cgroup_path $controller)
 
-    echo "$pid" | sudo tee -a "$path/cgroup.procs"
-    cat "$path/cgroup.procs"
+    echo "$pid" | sudo tee -a "$path/tasks"
 }
 
 
