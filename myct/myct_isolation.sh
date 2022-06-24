@@ -4,7 +4,9 @@
 myct_isolation::in_new_namespace() {
     local -r rootfs="$1" program="$2" args="$3"
     echo "let's run the executable: $program"
-    unshare --mount --pid --fork --root=$rootfs --mount-proc $program $args
+
+    unshare --mount --pid --fork --root=$rootfs --mount-proc $program $args &
+
 }
 
 # Run program in another existing namespace
