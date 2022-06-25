@@ -8,15 +8,17 @@ using namespace std;
 
 #define NUM_THREADS 5
 
-struct threadArgs {
+struct threadArgs
+{
     int x;
     int y;
     vector<vector<double>> heatmap;
 };
 
-void *CalculateTemperatureFromNeighborsAndSelf(void* args){
-    //params int x, int y, vector<vector<double>> &heatmap
-    threadArgs * actualArgs = (struct threadArgs *) args;
+void *CalculateTemperatureFromNeighborsAndSelf(void *args)
+{
+    // params int x, int y, vector<vector<double>> &heatmap
+    threadArgs *actualArgs = (struct threadArgs *)args;
 
     vector<vector<double>> heatmap = actualArgs->heatmap;
     int x = actualArgs->x;
@@ -28,22 +30,23 @@ void *CalculateTemperatureFromNeighborsAndSelf(void* args){
     // Noch nicht beachtet: Hotspots über Zeit
 
     double sum = 0;
-    sum += heatmap[x][y]; // self
-    sum += (x>0 && y>0) ? heatmap[x-1][y-1] : 0; // nordwest
-    sum += (x>0) ? heatmap[x-1][y] : 0; // west
-    sum += (x>0 && y<height) ? heatmap[x-1][y+1] : 0; // suedwest
-    sum += (y<height) ? heatmap[x][y+1] : 0; // sued
-    sum += (x<width && y<height) ? heatmap[x+1][y+1] : 0; // suedost
-    sum += (x<width) ? heatmap[x+1][y] : 0; // ost
-    sum += (x<width && y>0) ? heatmap[x+1][y-1] : 0; // nordost
-    sum += (y>0) ? heatmap[x][y-1] : 0; // nord
-    
-    double average = sum/9;
+    sum += heatmap[x][y];                                         // self
+    sum += (x > 0 && y > 0) ? heatmap[x - 1][y - 1] : 0;          // nordwest
+    sum += (x > 0) ? heatmap[x - 1][y] : 0;                       // west
+    sum += (x > 0 && y < height) ? heatmap[x - 1][y + 1] : 0;     // suedwest
+    sum += (y < height) ? heatmap[x][y + 1] : 0;                  // sued
+    sum += (x < width && y < height) ? heatmap[x + 1][y + 1] : 0; // suedost
+    sum += (x < width) ? heatmap[x + 1][y] : 0;                   // ost
+    sum += (x < width && y > 0) ? heatmap[x + 1][y - 1] : 0;      // nordost
+    sum += (y > 0) ? heatmap[x][y - 1] : 0;                       // nord
+
+    double average = sum / 9;
 
     return &average;
 }
 
-void simulateStep(vector<vector<double>> &heatmap, int width, int height) {
+void simulateStep(vector<vector<double>> &heatmap, int width, int height)
+{
     vector<vector<double>> nextRoundHeatMap = heatmap;
 
     int batches = ceil(width * height / NUM_THREADS);
@@ -54,28 +57,35 @@ void simulateStep(vector<vector<double>> &heatmap, int width, int height) {
     int x = 0;
     int y = 0;
 
-    for (int i = 1; i <= batches; i++) {
-        for (t = 0; t < NUM_THREADS; t++) {
+    for (int i = 1; i <= batches; i++)
+    {
+        for (t = 0; t < NUM_THREADS; t++)
+        {
 
-            if(x + 1 < width){
+            if (x + 1 < width)
+            {
                 x++;
             }
-            else{
+            else
+            {
                 x = 0;
                 y++;
             }
 
             printf("In main: creating thread %ld\n", t);
             rc = pthread_create(&threads[t], NULL, CalculateTemperatureFromNeighborsAndSelf, (void *)t);
-            if (rc != 0) {
+            if (rc != 0)
+            {
                 printf("ERROR; return code from pthread_create() is %d\n", rc);
                 exit(-1);
             }
         }
 
-        for (t = 0; t < NUM_THREADS; t++) {
+        for (t = 0; t < NUM_THREADS; t++)
+        {
             rc = pthread_join(threads[t], NULL);
-            if (rc != 0) {
+            if (rc != 0)
+            {
                 printf("ERROR; return code from pthread_join() is %d\n", rc);
                 exit(-1);
             }
@@ -83,9 +93,12 @@ void simulateStep(vector<vector<double>> &heatmap, int width, int height) {
     }
 }
 
-void printHeatmap(vector<vector<double>> &heatmap){
-    for(int i = 0; i < heatmap.size(); i++){
-        for(int j = 0; j < heatmap[0].size(); j++){
+void printHeatmap(vector<vector<double>> &heatmap)
+{
+    for (int i = 0; i < heatmap.size(); i++)
+    {
+        for (int j = 0; j < heatmap[0].size(); j++)
+        {
             cout << heatmap[i][j];
         }
         cout << "\n";
@@ -93,9 +106,11 @@ void printHeatmap(vector<vector<double>> &heatmap){
     return;
 }
 
-int main (int argc, char** argv) {
+int main(int argc, char **argv)
+{
     cout << "Hallo!";
-    if(argc < 3){
+    if (argc < 3)
+    {
         cout << "Error; not enough parameters";
     }
 
@@ -105,12 +120,12 @@ int main (int argc, char** argv) {
     string hotspotFileName = argv[3];
 
     vector<vector<double>> heatmap(fieldWidth, vector<double>(fieldHeight, 0));
-    vector<vector<double>> testMap {{0.0, 0., 0.}, {0.0, 1., 0.}, {0.0, 0., 0.}};
+    vector<vector<double>> testMap{{0.0, 0., 0.}, {0.0, 1., 0.}, {0.0, 0., 0.}};
 
-    for(int roundNum = 1; roundNum <= numberOfRounds; roundNum++) {
+    for (int roundNum = 1; roundNum <= numberOfRounds; roundNum++)
+    {
         simulateStep(heatmap, fieldWidth, fieldHeight);
     }
 
     printHeatmap(heatmap);
-
 }
