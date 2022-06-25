@@ -3,7 +3,7 @@
 
 using namespace std;
 
-const int NUM_THREADS = 8;
+const int NUM_THREADS = 4;
 
 class Heatmap
 {
@@ -127,30 +127,41 @@ void simulateRound(Heatmap &heatmap)
 {
     Heatmap futureHeatmap(heatmap.getWidth(), heatmap.getHeight());
 
-    // int batches = ceil(heatmap.getSize() / NUM_THREADS);
-    pthread_t threads[heatmap.getSize()];
-    int rc, t;
+    int numberOfBatches = ceil(heatmap.getSize() / NUM_THREADS);
+    pthread_t threads[NUM_THREADS];
+    int rc;
 
-    threadArgs threadArgs[heatmap.getSize()];
-    for (int i = 0; i < heatmap.getSize(); i++)
+    threadArgs threadArgs[NUM_THREADS];
+    for (int batchID = 0; batchID <= numberOfBatches; batchID++)
     {
-        threadArgs[i] = {&heatmap, &futureHeatmap, heatmap.getCoordinatesFromIndex(i)};
-        rc = pthread_create(&threads[i], NULL, calculateFutureTemperature, (void *)&threadArgs[i]);
-        if (rc != 0)
+        for (int threadID = 0; threadID < NUM_THREADS; threadID++)
         {
-            printf("ERROR; return code from pthread_create() is %d\n", rc);
-            exit(-1);
+            int currentIndex = batchID * NUM_THREADS + threadID;
+            if (currentIndex < heatmap.getSize())
+            {
+                threadArgs[threadID] = {&heatmap, &futureHeatmap, heatmap.getCoordinatesFromIndex(currentIndex)};
+                rc = pthread_create(&threads[threadID], NULL, calculateFutureTemperature, (void *)&threadArgs[threadID]);
+                if (rc != 0)
+                {
+                    printf("ERROR; return code from pthread_create() is %d\n", rc);
+                    exit(-1);
+                }
+            }
         }
-    }
 
-    for (int i = 0; i < heatmap.getSize(); i++)
-    {
-        rc = pthread_join(threads[i], NULL);
-        if (rc != 0)
+        for (int threadID = 0; threadID < NUM_THREADS; threadID++)
         {
-            printf("ERROR; return code from pthread_join() is %d\n", rc);
-            exit(-1);
-        }  
+            int currentIndex = batchID * NUM_THREADS + threadID;
+            if (currentIndex < heatmap.getSize())
+            {
+                rc = pthread_join(threads[threadID], NULL);
+                if (rc != 0)
+                {
+                    printf("ERROR; return code from pthread_join() is %d\n", rc);
+                    exit(-1);
+                }
+            }
+        }
     }
 
     heatmap = futureHeatmap;
@@ -165,9 +176,9 @@ int main(int argc, char **argv)
         // return -2;
     }
 
-    int fieldWidth = 10;
-    int fieldHeight = 10;
-    int numberOfRounds = 100;
+    int fieldWidth = 3;
+    int fieldHeight = 3;
+    int numberOfRounds = 3;
     string hotspotFileName = (argc > 4) ? argv[4] : "";
     if (argc >= 3)
     {
