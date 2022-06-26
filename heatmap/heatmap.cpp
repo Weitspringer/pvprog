@@ -1,9 +1,63 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <iterator>
 #include <cmath>
+#include <vector>
 
 using namespace std;
 
 const int NUM_THREADS = 4;
+
+class Lifecycle
+{
+    vector<pair<pair<int, int>, pair<int, int>>> data;
+
+public:
+    void addValue(pair<int, int> coordinates, pair<int, int> lifespan)
+    {
+        data.push_back(pair(coordinates, lifespan));
+    }
+
+    vector<pair<int, int>> getValuesByCoordinates(pair<int, int> coordinates)
+    {
+        vector<pair<int, int>> values;
+        for (auto const &entry : data)
+        {
+            if (entry.first == coordinates)
+            {
+                values.push_back(entry.second);
+            }
+        }
+        return values;
+    }
+
+    vector<pair<int, int>> getCellsByRound(int round)
+    {
+        vector<pair<int, int>> cells;
+        for (auto const &entry : data)
+        {
+            if ( (entry.second.first >= round) && (entry.second.second > round))
+            {
+                cells.push_back(entry.first);
+            }
+        }
+        return cells;
+    }
+
+    void print()
+    {
+        for (auto const &entry : data)
+        {
+            pair<int, int> key = entry.first;
+            pair<int, int> value = entry.second;
+            cout << "zelle (" << key.first << "," << key.second << "): start: " << value.first << " end: " << value.second << endl;
+        }
+        cout << endl;
+    }
+
+};
 
 class Heatmap
 {
@@ -80,6 +134,22 @@ public:
         }
         cout << endl;
     }
+
+    void printFormattedOutut()
+    {
+        ofstream outputFile;
+        outputFile.open("output.txt", ios_base::app);
+        outputFile << endl;
+        for (int i = 0; i < width * height; i++)
+        {
+            char character = (data[i] > 0.9) ? 'X' : (int) ((data[i] + 0.09)*10)%10 + '0';
+            outputFile << character;
+            if ((i + 1) % width == 0)
+                outputFile << endl;
+        }
+        outputFile << endl;
+        outputFile.close();
+    }
 };
 
 struct threadArgs
@@ -103,18 +173,23 @@ void *calculateFutureTemperature(void *args)
     int height = heatmap->getHeight();
 
     double sum = 0;
-    sum += heatmap->getValue(x, y);                                                  // self
-    sum += (x > 0 && y > 0) ? heatmap->getValue(x - 1, y - 1) : 0.;                  // nordwest
-    sum += (x > 0) ? heatmap->getValue(x - 1, y) : 0.;                               // west
-    sum += (x > 0 && y < height - 1) ? heatmap->getValue(x - 1, y + 1) : 0.;         // suedwest
-    sum += (y < height - 1) ? heatmap->getValue(x, y + 1) : 0.;                      // sued
-    sum += (x < width - 1 && y < height - 1) ? heatmap->getValue(x + 1, y + 1) : 0.; // suedost
-    sum += (x < width - 1) ? heatmap->getValue(x + 1, y) : 0.;                       // ost
-    sum += (x < width - 1 && y > 0) ? heatmap->getValue(x + 1, y - 1) : 0.;          // nordost
-    sum += (y > 0) ? heatmap->getValue(x, y - 1) : 0.;                               // nord
-
+    for (int i = -1; i <= 1; i++)
+    {
+        for (int j = -1; j <= 1; j++)
+        {
+            int neighbour_x = x + i;
+            int neighbour_y = y + j;
+            if (neighbour_x < 0 or neighbour_x >= width or neighbour_y < 0 or neighbour_y >= height)
+            {
+                sum += 0;
+            }
+            else
+            {
+                sum += heatmap->getValue(neighbour_x, neighbour_y);
+            }
+        }
+    }
     double average = sum / 9;
-    double *result = &average;
 
     output->setValue(x, y, average);
     threadArgs->result = average;
@@ -168,8 +243,59 @@ void simulateRound(Heatmap &heatmap)
     // heatmap.print();
 }
 
+void readData(string filename, Lifecycle &lifecycles)
+{
+    if (filename != "")
+    {
+        bool flag_header_read = false;
+
+        string line;
+        ifstream raw_data_file(filename);
+        if (raw_data_file.is_open())
+        { // always check whether the file is open
+            while (raw_data_file)
+            {
+                getline(raw_data_file, line);
+                if (flag_header_read)
+                {
+                    vector<int> tokens;
+                    string token;
+                    istringstream tokenStream(line);
+                    if (!line.empty())
+                    {
+                        while (getline(tokenStream, token, ','))
+                        {
+                            tokens.push_back(stoi(token));
+                        }
+                        lifecycles.addValue(pair(tokens[0], tokens[1]), pair(tokens[2], tokens[3]));
+                    }
+                }
+                else
+                {
+                    flag_header_read = true;
+                }
+            }
+        }
+        else
+        {
+            cout << "Couldn't open file\n";
+        }
+    }
+}
+
+void updateHotspots(Heatmap &heatmap, Lifecycle &lifecycles, int currentRound)
+{
+    vector<pair<int, int>> activeCells = lifecycles.getCellsByRound(currentRound);
+    
+    for (auto const &cell : activeCells)
+    {
+        heatmap.setValue(cell, 1.);
+    }
+}
+
 int main(int argc, char **argv)
 {
+    cout << argc << endl;
     if (argc < 3)
     {
         cout << "Error; not enough parameters specified, continuing with default parameters!" << endl;
@@ -180,22 +306,28 @@ int main(int argc, char **argv)
     int fieldHeight = 3;
     int numberOfRounds = 3;
     string hotspotFileName = (argc > 4) ? argv[4] : "";
-    if (argc >= 3)
+    if (argc >= 4)
     {
+        cout << "argc >=4" << endl;
         fieldWidth = stoi(argv[1]);
         fieldHeight = stoi(argv[2]);
         numberOfRounds = stoi(argv[3]);
+        hotspotFileName = argv[4];
     }
 
     Heatmap heatmap(fieldWidth, fieldHeight);
     heatmap.setValue(1, 1, 1);
+    Lifecycle lifecycles = Lifecycle();
 
-    for (int i = 0; i < numberOfRounds; i++)
+    readData(hotspotFileName, lifecycles);
+    
+    for (int i = 1; i <= numberOfRounds; i++)
     {
+        updateHotspots(heatmap, lifecycles, i);
         simulateRound(heatmap);
+        heatmap.printFormattedOutut();
+        updateHotspots(heatmap, lifecycles, i);
     }
 
-    heatmap.print();
-
-    cout << "Done!";
+    heatmap.printFormattedOutut();
 }
