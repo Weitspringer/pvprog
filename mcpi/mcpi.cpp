@@ -16,7 +16,7 @@
 using namespace std;
 
 int64_t numberOfPointsInCircleGlobal = 0;
-atomic<int64_t> numberOfPointsInCircleGlobalAtomic = 0;
+atomic<int64_t> numberOfPointsInCircleGlobalAtomic;
 
 bool isInCircle(double x, double y) {
 	return (x * x + y * y <= 1);
@@ -123,6 +123,7 @@ double calculatePiGlobal(int numThreads, int64_t numPoints) {
 }
 
 double calculatePiGlobalAtomic(int numThreads, int64_t numPoints) {
+	numberOfPointsInCircleGlobalAtomic = 0;
 	int64_t pointsPerBatch = ceil(numPoints / numThreads);
 	int64_t remaining_points = numPoints;
 

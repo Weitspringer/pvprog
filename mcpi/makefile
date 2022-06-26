@@ -14,5 +14,5 @@ mcpi: mcpi.o
 
 # The main.o target can be written more simply
 
-mcpi.o: mcpi.cpp
+mcpi.o: mcpi.cpp mcpi.h
 	$(CC) $(CFLAGS) -c mcpi.cpp
