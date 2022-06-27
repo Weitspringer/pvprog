@@ -15,13 +15,13 @@ heatmap: main.o utils.o heatmap.o lifecycle.o
 # The main.o target can be written more simply
 
 main.o: main.cpp main.h
-	$(CC) $(CFLAGS) -gomp -c main.cpp main.h
+	$(CC) $(CFLAGS) -c main.cpp main.h
 
 utils.o: utils.cpp utils.h
-	$(CC) $(CFLAGS)  -gomp -c utils.cpp utils.h
+	$(CC) $(CFLAGS) -c utils.cpp utils.h
 
 heatmap.o: heatmap.cpp heatmap.h
-	$(CC) $(CFLAGS)  -gomp -c heatmap.cpp heatmap.h
+	$(CC) $(CFLAGS) -c heatmap.cpp heatmap.h
 
 lifecycle.o: lifecycle.cpp lifecycle.h
-	$(CC) $(CFLAGS)  -gomp -c lifecycle.cpp lifecycle.h
+	$(CC) $(CFLAGS) -c lifecycle.cpp lifecycle.h
