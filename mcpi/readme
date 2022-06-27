@@ -1,0 +1,5 @@
+Wir konnten Aufgabe 3 nicht rechtzeitig abschließen.
+
+Die Messdaten beinhalten Ergebnisse für Strategien 1 und 2 alle Kerne sowie für Strategie 3 und bis einschließlich 2 Kerne.
+Die Fehler unserer Implementierung: 
+* Daten für Measurement können nicht eingelesen werden

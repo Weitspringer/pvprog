@@ -1,17 +1,35 @@
+#pragma once
 #include <vector>
+#include <iostream>
+#include <tuple>
+#include <set>
+#include <map>
 
-struct MeasurementEntry{
+using namespace std;
+
+struct measurementEntry{
     int strategy;
     int numStartedThreads;
-    int64_t numPoints;
+    string numPoints;
     double runtime;
-}
+};
 
 class Measurement
 {
 private:
     /* data */
-    vector<MeasurementEntry> data;
+    vector<measurementEntry> data;
+    map<tuple<int, int, string>, measurementEntry> averages;
+    set<tuple<int, int, string>> keys;
+    set<int> possibleThreads;
+    
 public:
-    void addMeasurement(int strategy, short nthreads, int64_t npoints, double runtime);
+    set<int>* getPossibleThreads();
+    map<tuple<int, int, string>, measurementEntry>* getAverages();
+    void addMeasurement(int strategy, int nthreads, string npoints, double runtime);
+    measurementEntry calculateAverageRuntime(int strategy, int numStartedThreads, string numPoints);
+    void generateMapOfRuntimeAverages();
+    void addKey(int strategy, int numStartedThreads, string numPoints);
+    void addpossibleThreadNum(int numStartedThreads);
+    void print();
 };

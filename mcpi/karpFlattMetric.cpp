@@ -24,7 +24,13 @@ void readMeasurementData(string filename, Measurement& measurements)
                         {
                             tokens.push_back(token);
                         }
-                        measurements.addMeasurement(stoi(tokens[0]), stoi(tokens[1]), strtoll(tokens[2]), stod(tokens[3]));
+                        int strategy = stoi(tokens[0]);
+                        int numThreads = stoi(tokens[1]);
+                        string numPoints = token[2];
+
+                        measurements.addKey(strategy, numThreads, numPoints);
+                        measurements.addpossibleThreadNum(numThreads) 
+                        measurements.addMeasurement(strategy, numThreads, numPoints, stod(tokens[3]));
                     }
                 }
                 else
@@ -40,13 +46,26 @@ void readMeasurementData(string filename, Measurement& measurements)
     }
 }
 
-double calculateKarpFlattMetric(double speedup, short nthreads) {
+double calculateKarpFlattMetric(int strategy, int64_t numPoints, Measurement &measurement) {
     double serialFraction = 1;
+
+    for(auto const& numThread : measurement.getPossibleThreads())
+
+    int nthreads = 0;
     if (nthreads > 1) {
         double serialFraction = ((1 / speedup) - (1 / nthreads)) / (1 - (1 / nthreads));
     } else {
-        perror("Error calculating Karp-Flatt metric: nthreads must be greater than 1");
+        cout << "Error calculating Karp-Flatt metric: nthreads must be greater than 1" << endl;
     }
     return serialFraction;
 }
 
+
+int main(int argc, char* argv[])
+{
+	string filename = "measurements.csv";
+    Measurement measurements;
+    readMeasurementData(filename, measurements);
+    //measurements.print();
+    //calculateKarpFlattMetric()
+}
