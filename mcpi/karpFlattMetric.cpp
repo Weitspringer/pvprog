@@ -15,17 +15,16 @@ void readMeasurementData(string filename, Measurement& measurements)
                 getline(raw_data_file, line);
                 if (flag_header_read)
                 {
-                    vector<int> tokens;
+                    vector<string> tokens;
                     string token;
                     istringstream tokenStream(line);
                     if (!line.empty())
                     {
                         while (getline(tokenStream, token, ','))
                         {
-                            tokens.push_back(stoi(token));
+                            tokens.push_back(token);
                         }
-                        measurements.addValue(pair(tokens))
-                        lifecycles.addValue(tokens[0], tokens[1], tokens[2], tokens[3]);
+                        measurements.addMeasurement(stoi(tokens[0]), stoi(tokens[1]), strtoll(tokens[2]), stod(tokens[3]));
                     }
                 }
                 else
@@ -46,7 +45,8 @@ double calculateKarpFlattMetric(double speedup, short nthreads) {
     if (nthreads > 1) {
         double serialFraction = ((1 / speedup) - (1 / nthreads)) / (1 - (1 / nthreads));
     } else {
-        perror("Error calculating Karp-Flatt metric: nthreads is not greater than 1");
+        perror("Error calculating Karp-Flatt metric: nthreads must be greater than 1");
     }
     return serialFraction;
 }
+
