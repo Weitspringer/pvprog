@@ -18,12 +18,12 @@ vector<pair<int, int>> Lifecycle::getValuesByCoordinates(pair<int, int> coordina
     return values;
 }
 
-vector<pair<int, int>> Lifecycle::getCellsByRound(int round)
+vector<pair<int, int>> Lifecycle::getCellsByRound(int currentRound)
 {
     vector<pair<int, int>> cells;
     for (auto const &entry : data)
     {
-        if ( (entry.second.first >= round) && (entry.second.second > round))
+        if ((currentRound >= entry.second.first) && (currentRound < entry.second.second))
         {
             cells.push_back(entry.first);
         }
@@ -33,8 +33,10 @@ vector<pair<int, int>> Lifecycle::getCellsByRound(int round)
 
 void Lifecycle::print()
 {
+    int i = 0;
     for (auto const &entry : data)
     {
+        cout << "Eintrag #" << i++ << ": ";
         pair<int, int> key = entry.first;
         pair<int, int> value = entry.second;
         cout << "zelle (" << key.first << "," << key.second << "): start: " << value.first << " end: " << value.second << endl;

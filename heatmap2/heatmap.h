@@ -1,6 +1,7 @@
 #pragma once
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -33,5 +34,9 @@ public:
 
     void print();
 
-    void printFormattedOutut();
+    void printFormattedOutput();
+
+    void printFormattedOutputCout();
+
+    void printAtCoords(vector<pair<int, int>>);
 };

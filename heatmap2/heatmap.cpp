@@ -69,22 +69,46 @@ void Heatmap::print()
     cout << endl;
 }
 
-void Heatmap::printFormattedOutut()
+void Heatmap::printFormattedOutput()
 {
-    /*
+
     ofstream outputFile;
-    outputFile.open("output.txt", ios_base::app);
+    outputFile.open("output.txt");
     outputFile << endl;
-    */
+
     for (int i = 0; i < width * height; i++)
     {
         char character = (data[i] > 0.9) ? 'X' : (int) ((data[i] + 0.09)*10)%10 + '0';
+        outputFile << character;
+        if ((i + 1) % width == 0)
+            outputFile << endl;
+    }
+
+    outputFile << endl;
+    outputFile.close();
+
+}
+
+void Heatmap::printFormattedOutputCout()
+{
+    for (int i = 0; i < width * height; i++)
+    {
+        char character = (data[i] > 0.9) ? 'X' : ((int) ((data[i] + 0.09)*10))%10 + '0';
         cout << character;
         if ((i + 1) % width == 0)
             cout << endl;
     }
-    /*
+}
+
+void Heatmap::printAtCoords(vector<pair<int, int>> coords) {
+    ofstream outputFile;
+    outputFile.open("output.txt");
+    outputFile << endl;
+
+    for (auto const& coordinate : coords) {
+        outputFile << getValue(coordinate) << endl;
+    }
+
     outputFile << endl;
     outputFile.close();
-    */
 }

@@ -5,34 +5,6 @@
 
 using namespace std;
 
-double calculateFutureTemperature(Heatmap &heatmap, int x, int y)
-{
-	int width = heatmap.getWidth();
-    int height = heatmap.getHeight();
-
-    double sum = 0;
-	for (int i = -1; i <= 1; i++)
-	{
-		for (int j = -1; j <= 1; j++)
-		{
-			int neighbour_x = x + i;
-			int neighbour_y = y + j;
-			if (neighbour_x < 0 or neighbour_x >= width or neighbour_y < 0 or neighbour_y >= height)
-			{
-				sum += 0;
-			}
-			else
-			{
-				sum += heatmap.getValue(neighbour_x, neighbour_y);
-			}
-		}
-	}
-
-    double average = sum / 9;
-
-    return average;
-}
-
 void simulateRound(Heatmap& heatmap)
 {
 	Heatmap futureHeatmap(heatmap.getWidth(), heatmap.getHeight());
@@ -48,40 +20,68 @@ void simulateRound(Heatmap& heatmap)
 	heatmap = futureHeatmap;
 }
 
-
 int main(int argc, char** argv)
 {
+    cout << argc;
     if (argc < 3)
     {
         cout << "Error; not enough parameters specified, continuing with default parameters!" << endl;
         // return -2;
     }
 
-    int fieldWidth = 3;
-    int fieldHeight = 3;
-    int numberOfRounds = 10;
-    string hotspotFileName = (argc > 4) ? argv[4] : "";
-    if (argc >= 4)
+    int fieldWidth = 20;
+    int fieldHeight = 7;
+    int numberOfRounds = 17;
+    string hotspotFileName = (argc > 4) ? argv[4] : "hotspots.csv";
+    string coordsFileName = (argc > 5) ? argv[5] : "";
+
+    cout << "Reading arguments";
+    if (argc > 4)
     {
-        cout << "argc >=4" << endl;
         fieldWidth = stoi(argv[1]);
         fieldHeight = stoi(argv[2]);
         numberOfRounds = stoi(argv[3]);
         hotspotFileName = argv[4];
     }
 
-    Heatmap heatmap(fieldWidth, fieldHeight);
-    heatmap.setValue(1, 1, 1);
-    Lifecycle lifecycles = Lifecycle();
-
-    // readData(hotspotFileName, lifecycles);
-
-    for (int i = 1; i <= numberOfRounds; i++)
-    {
-        //updateHotspots(heatmap, lifecycles, i);
-        simulateRound(heatmap);
-        //updateHotspots(heatmap, lifecycles, i);
+    if (argc > 5) {
+        coordsFileName = argv[5];
     }
 
-    heatmap.printFormattedOutut();
+    Heatmap heatmap(fieldWidth, fieldHeight);
+    Lifecycle lifecycles = Lifecycle();
+    vector<pair<int, int>> coords;
+
+    cout << "Hallo!";
+    readData(hotspotFileName, lifecycles);
+    readData(coordsFileName, coords);
+
+    for (auto const& xy : coords) {
+        cout << xy.first << ", " << xy.second << endl;
+    }
+
+    for (int i = 0; i < numberOfRounds; i++)
+    {
+        updateHotspots(heatmap, lifecycles, i);
+        cout << "updateHotspots in Round " << i << "/" << numberOfRounds << endl;
+        simulateRound(heatmap);
+        cout << "simulateRound in Round " << i << "/" << endl;
+        updateHotspots(heatmap, lifecycles, i+1);
+        cout << "updateHotspots(i+1) in Round " << i << "/" << endl;
+    }
+
+    cout << "reachedOutput" << endl;
+
+    if (coords.empty())
+    {
+        cout << "Print all coordinates" << endl;
+        heatmap.printFormattedOutput();
+    }
+    else
+    {
+        cout << "Print selected coordinates" << endl;
+        heatmap.printAtCoords(coords);
+    }
+
+    return 0;
 }

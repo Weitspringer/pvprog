@@ -3,13 +3,11 @@
 
 #pragma once
 
+#include "utils.h"
 #include "heatmap.h"
 #include "lifecycle.h"
 
 #include <omp.h>
-
-#include <iostream>
-#include <string>
 
 // TODO: Reference additional headers your program requires here.
 
