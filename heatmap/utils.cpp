@@ -24,7 +24,7 @@ void readData(string filename, Lifecycle& lifecycles)
                         {
                             tokens.push_back(stoi(token));
                         }
-                        lifecycles.addValue(pair(tokens[0], tokens[1]), pair(tokens[2], tokens[3]));
+                        lifecycles.addValue(pair<int, int>(tokens[0], tokens[1]), pair<int, int>(tokens[2], tokens[3]));
                     }
                 }
                 else
@@ -65,7 +65,7 @@ void readData(string filename, vector<pair<int, int>>& coords)
                         {
                             tokens.push_back(stoi(token));
                         }
-                        coords.push_back(pair(tokens[0], tokens[1]));
+                        coords.push_back(pair<int, int>(tokens[0], tokens[1]));
                     }
                 }
                 else

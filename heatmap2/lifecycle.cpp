@@ -2,7 +2,7 @@
 
 void Lifecycle::addValue(pair<int, int> coordinates, pair<int, int> lifespan)
     {
-        data.push_back(pair(coordinates, lifespan));
+        data.push_back(pair<pair<int, int>, pair<int, int>>(coordinates, lifespan));
     }
 
 vector<pair<int, int>> Lifecycle::getValuesByCoordinates(pair<int, int> coordinates)

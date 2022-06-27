@@ -55,7 +55,7 @@ int Heatmap::getSize()
 
 pair<int, int> Heatmap::getCoordinatesFromIndex(int index)
 {
-    return pair(index % width, (int)index / width);
+    return pair<int, int>(index % width, (int)index / width);
 }
 
 void Heatmap::print()
