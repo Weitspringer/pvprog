@@ -20,9 +20,9 @@ public:
 
     double getValue(pair<int, int> coordinates);
 
-    void setValue(int x, int y, double value);
+    __host__ __device__ void setValue(int x, int y, double value);
 
-    void setValue(pair<int, int> coordinates, double value);
+    __host__ __device__ void setValue(pair<int, int> coordinates, double value);
 
     int getWidth();
 
@@ -30,7 +30,7 @@ public:
 
     int getSize();
 
-    pair<int, int> getCoordinatesFromIndex(int index);
+    __host__ __device__ pair<int, int> getCoordinatesFromIndex(int index);
 
     void print();
 

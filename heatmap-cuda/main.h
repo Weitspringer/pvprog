@@ -1,12 +1,9 @@
-﻿// heatmap2.h : Include file for standard system include files,
-// or project specific include files.
-
-#include "utils.h"
+﻿#include "utils.h"
 #include "heatmap.h"
 #include "lifecycle.h"
 
-#include <omp.h>
-
-// TODO: Reference additional headers your program requires here.
+#include <cuda_profiler_api.h>
 
 int main(int argc, char** argv);
+
+__global__ void _cuda_simulate_round(Heatmap *heatmap, Heatmap *futureHeatmap, int numElements);

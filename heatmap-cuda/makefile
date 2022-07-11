@@ -3,25 +3,25 @@
 # *****************************************************
 # Variables to control Makefile operation
 
-CC = g++
-CFLAGS = -Wall -g -fopenmp
+CC = nvcc
+CFLAGS = -g --expt-relaxed-constexpr
 
 # ****************************************************
 # Targets needed to bring the executable up to date
 
 heatmap: main.o utils.o heatmap.o lifecycle.o
-	$(CC) $(CFLAGS) -o heatmap main.o utils.o heatmap.o lifecycle.o
+	$(CC) $(CFLAGS) -o heatmap main.obj utils.obj heatmap.obj lifecycle.obj
 
 # The main.o target can be written more simply
 
-main.o: main.cpp main.h
-	$(CC) $(CFLAGS) -c main.cpp main.h
+main.o: main.cu
+	$(CC) $(CFLAGS) -c main.cu -dc
 
-utils.o: utils.cpp utils.h
-	$(CC) $(CFLAGS) -c utils.cpp utils.h
+utils.o: utils.cu
+	$(CC) $(CFLAGS) -c utils.cu -dc
 
-heatmap.o: heatmap.cpp heatmap.h
-	$(CC) $(CFLAGS) -c heatmap.cpp heatmap.h
+heatmap.o: heatmap.cu
+	$(CC) $(CFLAGS) -c heatmap.cu -dc
 
-lifecycle.o: lifecycle.cpp lifecycle.h
-	$(CC) $(CFLAGS) -c lifecycle.cpp lifecycle.h
+lifecycle.o: lifecycle.cpp
+	$(CC) $(CFLAGS) -c lifecycle.cpp -dc

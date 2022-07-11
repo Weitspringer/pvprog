@@ -93,7 +93,7 @@ double calculateFutureTemperature(Heatmap &heatmap, int x, int y)
 		{
 			int neighbour_x = x + i;
 			int neighbour_y = y + j;
-			if (neighbour_x < 0 or neighbour_x >= width or neighbour_y < 0 or neighbour_y >= height)
+			if (neighbour_x < 0 || neighbour_x >= width || neighbour_y < 0 || neighbour_y >= height)
 			{
 				sum += 0;
 			}

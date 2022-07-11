@@ -53,7 +53,7 @@ int Heatmap::getSize()
     return width * height;
 }
 
-pair<int, int> Heatmap::getCoordinatesFromIndex(int index)
+__device__ pair<int, int> Heatmap::getCoordinatesFromIndex(int index)
 {
     return pair<int, int>(index % width, (int)index / width);
 }
