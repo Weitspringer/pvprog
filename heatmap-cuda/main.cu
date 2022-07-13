@@ -2,34 +2,7 @@
 
 using namespace std;
 
-void simulateRound(Heatmap &heatmap)
-{
-    // Copy data to device
-    Heatmap futureHeatmap(heatmap.getWidth(), heatmap.getHeight());
-    Heatmap *futureHeatmapPointer = &futureHeatmap;
-    Heatmap *heatmapPointer = &heatmap;
-    
-    // Copy data to device
-    cudaMalloc(&futureHeatmapPointer, sizeof(futureHeatmap));
-    cudaMalloc(&heatmapPointer, sizeof(heatmap));
-    cudaMemcpy(&futureHeatmap, &futureHeatmap, sizeof(futureHeatmap), cudaMemcpyHostToDevice);
-    cudaMemcpy(&heatmap, &heatmap, sizeof(heatmap), cudaMemcpyHostToDevice);
-
-    // Launch kernel
-    int threadsPerBlock = 256;
-    int blocksPerGrid = (heatmap.getSize() + threadsPerBlock - 1) / threadsPerBlock;
-    _cuda_simulate_round<<<threadsPerBlock, blocksPerGrid>>>(&heatmap, &futureHeatmap, heatmap.getSize());
-
-    // Copy results back to device
-    cudaDeviceSynchronize(); // Block CPU code until all GPU functions complete
-    cudaMemcpy(&heatmap, &futureHeatmap, sizeof(heatmap), cudaMemcpyDeviceToHost);
-    cudaFree(&futureHeatmap);
-    cudaFree(&heatmap);
-
-    heatmap = futureHeatmap;
-}
-
-__global__ void _cuda_simulate_round(Heatmap *heatmap, Heatmap *futureHeatmap, int numElements)
+__global__ void simulateRoundWithCuda(Heatmap *heatmap, Heatmap *futureHeatmap, int numElements)
 {
     int globalIdx = blockIdx.x * blockDim.x + threadIdx.x;
     while (globalIdx < numElements)
@@ -40,6 +13,7 @@ __global__ void _cuda_simulate_round(Heatmap *heatmap, Heatmap *futureHeatmap, i
         globalIdx += blockDim.x * gridDim.x;
         __syncthreads();
     }
+    heatmap = futureHeatmap;
 }
 
 int main(int argc, char **argv)
@@ -82,17 +56,33 @@ int main(int argc, char **argv)
         cout << xy.first << ", " << xy.second << endl;
     }
 
+    int threadsPerBlock = 256;
+    int blocksPerGrid = (heatmap.getSize() + threadsPerBlock - 1) / threadsPerBlock;
+
+    // Copy data to device
+    Heatmap futureHeatmap(heatmap.getWidth(), heatmap.getHeight());
+    Heatmap *futureHeatmapPointer = &futureHeatmap;
+    Heatmap *heatmapPointer = &heatmap;
+    
+    // Copy data to device
+    cudaMalloc(&futureHeatmapPointer, sizeof(futureHeatmap));
+    cudaMalloc(&heatmapPointer, sizeof(heatmap));
+    cudaMemcpy(&futureHeatmap, &futureHeatmap, sizeof(futureHeatmap), cudaMemcpyHostToDevice);
+    cudaMemcpy(&heatmap, &heatmap, sizeof(heatmap), cudaMemcpyHostToDevice);
+
     for (int i = 0; i < numberOfRounds; i++)
     {
         updateHotspots(heatmap, lifecycles, i);
-        cout << "updateHotspots in round " << i << "/" << numberOfRounds << endl;
-        simulateRound(heatmap);
-        cout << "simulateRound in round " << i << endl;
+        simulateRoundWithCuda<<<threadsPerBlock, blocksPerGrid>>>(&heatmap, &futureHeatmap, heatmap.getSize());
+        cudaDeviceSynchronize();
         updateHotspots(heatmap, lifecycles, i + 1);
-        cout << "updateHotspots(i+1) in round " << i << endl;
     }
 
-    cout << "Calculation finished..." << endl;
+    // Copy results back to device
+    cudaDeviceSynchronize(); // Block CPU code until all GPU functions complete
+    cudaMemcpy(&heatmap, &futureHeatmap, sizeof(heatmap), cudaMemcpyDeviceToHost);
+    cudaFree(&futureHeatmap);
+    cudaFree(&heatmap);
 
     if (coords.empty())
     {

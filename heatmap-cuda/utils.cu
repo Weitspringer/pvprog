@@ -81,7 +81,7 @@ void readData(string filename, vector<pair<int, int>>& coords)
     }
 }
 
-double calculateFutureTemperature(Heatmap &heatmap, int x, int y)
+__device__ double calculateFutureTemperature(Heatmap &heatmap, int x, int y)
 {
 	int width = heatmap.getWidth();
     int height = heatmap.getHeight();
@@ -109,7 +109,7 @@ double calculateFutureTemperature(Heatmap &heatmap, int x, int y)
     return average;
 }
 
-void updateHotspots(Heatmap& heatmap, Lifecycle& lifecycles, int currentRound)
+__host__ void updateHotspots(Heatmap& heatmap, Lifecycle& lifecycles, int currentRound)
 {
     vector<pair<int, int>> activeCells = lifecycles.getCellsByRound(currentRound);
 
@@ -118,7 +118,7 @@ void updateHotspots(Heatmap& heatmap, Lifecycle& lifecycles, int currentRound)
         if (cell.first < heatmap.getWidth() && cell.second < heatmap.getHeight())
         {
             heatmap.setValue(cell, 1);
-            cout << "Hotspot set for round " << currentRound << " at " << cell.first << "," << cell.second << endl;
+            // cout << "Hotspot set for round " << currentRound << " at " << cell.first << "," << cell.second << endl;
         }
     }
 }
