@@ -4,7 +4,7 @@ using namespace std;
 
 __global__ void simulateRoundWithCuda(Heatmap *heatmap, Heatmap *futureHeatmap, int numElements)
 {
-    printf("Heatmap before simulation (GPU): ");
+    printf("Heatmap before simulation (GPU): \n");
     heatmap->printFormattedOutputDevice();
     int globalIdx = blockIdx.x * blockDim.x + threadIdx.x;
     while (globalIdx < numElements)
