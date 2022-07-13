@@ -8,8 +8,6 @@ void simulateRound(Heatmap &heatmap)
     Heatmap futureHeatmap(heatmap.getWidth(), heatmap.getHeight());
     Heatmap *futureHeatmapPointer = &futureHeatmap;
     Heatmap *heatmapPointer = &heatmap;
-
-    cudaProfilerStart();
     
     // Copy data to device
     cudaMalloc(&futureHeatmapPointer, sizeof(futureHeatmap));
@@ -27,8 +25,6 @@ void simulateRound(Heatmap &heatmap)
     cudaMemcpy(&heatmap, &futureHeatmap, sizeof(heatmap), cudaMemcpyDeviceToHost);
     cudaFree(&futureHeatmap);
     cudaFree(&heatmap);
-    
-    cudaProfilerStop();
 
     heatmap = futureHeatmap;
 }
@@ -48,7 +44,6 @@ __global__ void _cuda_simulate_round(Heatmap *heatmap, Heatmap *futureHeatmap, i
 
 int main(int argc, char **argv)
 {
-    cout << argc;
     if (argc < 3)
     {
         cout << "Error; not enough parameters specified, continuing with default parameters!" << endl;
@@ -61,7 +56,7 @@ int main(int argc, char **argv)
     string hotspotFileName = (argc > 4) ? argv[4] : "hotspots.csv";
     string coordsFileName = (argc > 5) ? argv[5] : "";
 
-    cout << "Reading arguments";
+    cout << "Reading arguments..." << endl;
     if (argc > 4)
     {
         fieldWidth = stoi(argv[1]);
@@ -79,7 +74,6 @@ int main(int argc, char **argv)
     Lifecycle lifecycles = Lifecycle();
     vector<pair<int, int>> coords;
 
-    cout << "Hallo!";
     readData(hotspotFileName, lifecycles);
     readData(coordsFileName, coords);
 
@@ -91,23 +85,23 @@ int main(int argc, char **argv)
     for (int i = 0; i < numberOfRounds; i++)
     {
         updateHotspots(heatmap, lifecycles, i);
-        cout << "updateHotspots in Round " << i << "/" << numberOfRounds << endl;
+        cout << "updateHotspots in round " << i << "/" << numberOfRounds << endl;
         simulateRound(heatmap);
-        cout << "simulateRound in Round " << i << "/" << endl;
+        cout << "simulateRound in round " << i << endl;
         updateHotspots(heatmap, lifecycles, i + 1);
-        cout << "updateHotspots(i+1) in Round " << i << "/" << endl;
+        cout << "updateHotspots(i+1) in round " << i << endl;
     }
 
-    cout << "reachedOutput" << endl;
+    cout << "Calculation finished..." << endl;
 
     if (coords.empty())
     {
-        cout << "Print all coordinates" << endl;
+        cout << "Print all coordinates." << endl;
         heatmap.printFormattedOutput();
     }
     else
     {
-        cout << "Print selected coordinates" << endl;
+        cout << "Print selected coordinates." << endl;
         heatmap.printAtCoords(coords);
     }
 

@@ -4,13 +4,14 @@
 # Variables to control Makefile operation
 
 CC = nvcc
-CFLAGS = -g --expt-relaxed-constexpr
+CFLAGS = -g
+NVCC = -g -o
 
 # ****************************************************
 # Targets needed to bring the executable up to date
 
 heatmap: main.o utils.o heatmap.o lifecycle.o
-	$(CC) $(CFLAGS) -o heatmap main.obj utils.obj heatmap.obj lifecycle.obj
+	$(CC) $(NVCC) heatmap main.obj utils.obj heatmap.obj lifecycle.obj
 
 # The main.o target can be written more simply
 

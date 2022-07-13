@@ -35,7 +35,7 @@ void readData(string filename, Lifecycle& lifecycles)
         }
         else
         {
-            cout << "Couldn't open file\n";
+            cout << "Couldn't open file" << endl;
         }
     }
 }
@@ -76,7 +76,7 @@ void readData(string filename, vector<pair<int, int>>& coords)
         }
         else
         {
-            cout << "Couldn't open file\n";
+            cout << "Couldn't open file" << endl;
         }
     }
 }
@@ -118,7 +118,7 @@ void updateHotspots(Heatmap& heatmap, Lifecycle& lifecycles, int currentRound)
         if (cell.first < heatmap.getWidth() && cell.second < heatmap.getHeight())
         {
             heatmap.setValue(cell, 1);
-            cout << "hotspot set (Round " << currentRound << " " << cell.first << ", " << cell.second << endl;
+            cout << "Hotspot set for round " << currentRound << " at " << cell.first << "," << cell.second << endl;
         }
     }
 }
