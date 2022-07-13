@@ -4,6 +4,8 @@ using namespace std;
 
 __global__ void simulateRoundWithCuda(Heatmap *heatmap, Heatmap *futureHeatmap, int numElements)
 {
+    printf("Heatmap before simulation (GPU): ");
+    heatmap->printFormattedOutputDevice();
     int globalIdx = blockIdx.x * blockDim.x + threadIdx.x;
     while (globalIdx < numElements)
     {
@@ -14,6 +16,8 @@ __global__ void simulateRoundWithCuda(Heatmap *heatmap, Heatmap *futureHeatmap, 
         __syncthreads();
     }
     heatmap = futureHeatmap;
+    printf("Heatmap after simulation (GPU): ");
+    heatmap->printFormattedOutputDevice();
 }
 
 int main(int argc, char **argv)
@@ -59,33 +63,33 @@ int main(int argc, char **argv)
     int threadsPerBlock = 256;
     int blocksPerGrid = (heatmap.getSize() + threadsPerBlock - 1) / threadsPerBlock;
 
-    // Copy data to device
     Heatmap futureHeatmap(heatmap.getWidth(), heatmap.getHeight());
     Heatmap *futureHeatmapPointer = &futureHeatmap;
     Heatmap *heatmapPointer = &heatmap;
     
-    // Copy data to device
     cudaMalloc(&futureHeatmapPointer, sizeof(futureHeatmap));
     cudaMalloc(&heatmapPointer, sizeof(heatmap));
 
     for (int i = 0; i < numberOfRounds; i++)
     {
         updateHotspots(heatmap, lifecycles, i);
-        cout << "Round " << i << ", before simulation: " << endl;
+        cout << endl << "=======" << endl;
+        cout << "Round " << i << ", before simulation (CPU): " << endl;
         heatmap.printFormattedOutputCout();
         cout << endl;
+
         cudaMemcpy(&futureHeatmap, &futureHeatmap, sizeof(futureHeatmap), cudaMemcpyHostToDevice);
         cudaMemcpy(&heatmap, &heatmap, sizeof(heatmap), cudaMemcpyHostToDevice);
         simulateRoundWithCuda<<<threadsPerBlock, blocksPerGrid>>>(&heatmap, &futureHeatmap, heatmap.getSize());
         cudaDeviceSynchronize();
         cudaMemcpy(&heatmap, &futureHeatmap, sizeof(heatmap), cudaMemcpyDeviceToHost);
-        cout << "Round " << i << ", after simulation" << endl;
+        
+        cout << "Round " << i << ", after simulation (CPU): " << endl;
         heatmap.printFormattedOutputCout();
-        cout << endl;
+        cout << "=======" << endl;
         updateHotspots(heatmap, lifecycles, i + 1);
     }
 
-    // Copy results back to device
     cudaFree(&futureHeatmap);
     cudaFree(&heatmap);
 

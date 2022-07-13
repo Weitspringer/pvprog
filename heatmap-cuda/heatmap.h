@@ -38,5 +38,7 @@ public:
 
     void printFormattedOutputCout();
 
+    __device__ void printFormattedOutputDevice();
+
     void printAtCoords(vector<pair<int, int>>);
 };

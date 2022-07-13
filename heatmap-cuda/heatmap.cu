@@ -100,6 +100,17 @@ void Heatmap::printFormattedOutputCout()
     }
 }
 
+__device__ void Heatmap::printFormattedOutputDevice()
+{
+    for (int i = 0; i < width * height; i++)
+    {
+        char character = (data[i] > 0.9) ? 'X' : ((int) ((data[i] + 0.09)*10))%10 + '0';
+        printf("%c", character);
+        if ((i + 1) % width == 0)
+            printf("\n");
+    }
+}
+
 void Heatmap::printAtCoords(vector<pair<int, int>> coords) {
     ofstream outputFile;
     outputFile.open("output.txt");
