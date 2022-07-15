@@ -81,7 +81,7 @@ void readData(string filename, vector<pair<int, int>>& coords)
     }
 }
 
-__device__ double calculateFutureTemperature(Heatmap &heatmap, int x, int y)
+__host__ __device__ double calculateFutureTemperature(Heatmap &heatmap, int x, int y)
 {
 	int width = heatmap.getWidth();
     int height = heatmap.getHeight();
@@ -109,7 +109,7 @@ __device__ double calculateFutureTemperature(Heatmap &heatmap, int x, int y)
     return average;
 }
 
-__host__ void updateHotspots(Heatmap& heatmap, Lifecycle& lifecycles, int currentRound)
+__host__ __device__ void updateHotspots(Heatmap& heatmap, Lifecycle& lifecycles, int currentRound)
 {
     vector<pair<int, int>> activeCells = lifecycles.getCellsByRound(currentRound);
 

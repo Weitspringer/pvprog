@@ -9,11 +9,11 @@ class Lifecycle
     vector<pair<pair<int, int>, pair<int, int>>> data;
 
 public:
-    void addValue(pair<int, int> coordinates, pair<int, int> lifespan);
+    __host__ __device__ void addValue(pair<int, int> coordinates, pair<int, int> lifespan);
 
-    vector<pair<int, int>> getValuesByCoordinates(pair<int, int> coordinates);
+    __host__ __device__ vector<pair<int, int>> getValuesByCoordinates(pair<int, int> coordinates);
 
-    vector<pair<int, int>> getCellsByRound(int round);
+    __host__ __device__ vector<pair<int, int>> getCellsByRound(int round);
 
     void print();
 

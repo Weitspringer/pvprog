@@ -2,14 +2,14 @@
 
 using namespace std;
 
-__global__ void simulateRoundWithCuda(double* d_data, double* futureData, int numberOfElements)
+__global__ void simulateRoundWithCuda(Heatmap* d_heatmap, int numberOfElements)
 {
-    int globalIdx = blockIdx.x * blockDim.x + threadIdx.x;
-    while (globalIdx < numberOfElements)
+    // Calculate position in a flattened array
+    int threadPositionFlat = blockIdx.x * blockDim.x + threadIdx.x;
+    if (threadPositionFlat < numberOfElements)
     {
-        futureData[globalIdx] = 1;
-        globalIdx += blockDim.x * gridDim.x;
-        __syncthreads();
+        pair<int, int> coordinates = d_heatmap->getCoordinatesFromIndex(threadPositionFlat);
+        d_heatmap->setValue(coordinates.first, coordinates.second, calculateFutureTemperature(*d_heatmap, coordinates.first, coordinates.second));
     }
 }
 
@@ -58,21 +58,48 @@ int main(int argc, char **argv)
     int threadsPerBlock = 256;
     int blocksPerGrid = (numberOfElements + threadsPerBlock - 1) / threadsPerBlock;
 
-    // Copy all data to device
+    updateHotspots(heatmap, lifecycles, 0);
+    heatmap.printFormattedOutputCout();
+
+    // Create class storage on device and copy top level class
+    Heatmap *d_heatmap;
+    cudaMalloc((void **)&d_heatmap, sizeof(Heatmap));
+    cudaMemcpy(d_heatmap, &heatmap, sizeof(Heatmap), cudaMemcpyHostToDevice);
+    // Make an allocated region on device for use by pointer in class
     double *d_data;
-    cudaMalloc(&d_data, numberOfElements);
-    double *futureData;
-    cudaMalloc(&futureData, numberOfElements);
-    cudaMemcpy(d_data, heatmap.data, numberOfElements, cudaMemcpyHostToDevice);
-    cudaMemcpy(futureData, heatmap.data, numberOfElements, cudaMemcpyHostToDevice);
+    cudaMalloc((void **)&d_data, sizeof(double)*numberOfElements);
+    cudaMemcpy(d_data, heatmap.data, sizeof(double)*numberOfElements, cudaMemcpyHostToDevice);
+    int *d_width;
+    cudaMalloc((void **)&d_width, sizeof(int));
+    cudaMemcpy(d_width, &heatmap.width, sizeof(int), cudaMemcpyHostToDevice);
+    int *d_height;
+    cudaMalloc((void **)&d_height, sizeof(int));
+    cudaMemcpy(d_height, &heatmap.height, sizeof(int), cudaMemcpyHostToDevice);
+    // Copy pointer to allocated device storage to device class
+    cudaMemcpy(&(d_heatmap->data), &d_data, sizeof(double *), cudaMemcpyHostToDevice);
+
     // Run Kernel
-    simulateRoundWithCuda<<<threadsPerBlock, blocksPerGrid>>>(d_data, futureData, numberOfElements);
+    simulateRoundWithCuda<<<threadsPerBlock, blocksPerGrid>>>(d_heatmap, numberOfElements);
+    
     // Copy data to host
     cudaDeviceSynchronize();
-    cudaMemcpy(heatmap.data, futureData, numberOfElements, cudaMemcpyDeviceToHost);
+    cudaMemcpy(&d_data, &(d_heatmap->data), sizeof(double)*numberOfElements, cudaMemcpyDeviceToDevice);
+    cudaMemcpy(heatmap.data, d_data, sizeof(double)*numberOfElements, cudaMemcpyDeviceToHost);
     // Cleanup
-    cudaFree(futureData);
+    cudaFree(d_heatmap);
     cudaFree(d_data);
+    cudaFree(d_width);
+    cudaFree(d_height);
+
+    //for (int i = 0; i < numberOfRounds; i++)
+    //{
+    //    updateHotspots(heatmap, lifecycles, i);
+    //    cout << "updateHotspots in Round " << i << "/" << numberOfRounds << endl;
+    //    simulateRound(heatmap);
+    //    cout << "simulateRound in Round " << i << "/" << endl;
+    //    updateHotspots(heatmap, lifecycles, i+1);
+    //    cout << "updateHotspots(i+1) in Round " << i << "/" << endl;
+    //}
 
     if (coords.empty())
     {

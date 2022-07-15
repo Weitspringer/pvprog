@@ -4,8 +4,8 @@
 # Variables to control Makefile operation
 
 CC = nvcc
-CFLAGS = -g
-NVCC = -g -o
+CFLAGS = -g --expt-relaxed-constexpr
+NVCC = -g --run -o
 
 # ****************************************************
 # Targets needed to bring the executable up to date
@@ -24,5 +24,5 @@ utils.o: utils.cu
 heatmap.o: heatmap.cu
 	$(CC) $(CFLAGS) -c heatmap.cu -dc
 
-lifecycle.o: lifecycle.cpp
-	$(CC) $(CFLAGS) -c lifecycle.cpp -dc
+lifecycle.o: lifecycle.cu
+	$(CC) $(CFLAGS) -c lifecycle.cu -dc

@@ -6,4 +6,4 @@
 
 int main(int argc, char** argv);
 
-__global__ void _cuda_simulate_round(double* d_data, double* futureData, int numberOfElements);
+__global__ void _cuda_simulate_round(Heatmap* d_heatmap, int numberOfElements);
