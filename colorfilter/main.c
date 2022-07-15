@@ -31,16 +31,33 @@ void filter1(uint8_t *in, uint8_t *out, int num_pixels)
 
 void filter2(uint8_t *in, uint8_t *out, int num_pixels)
 {
-	(void)in;         /* UNUSED */
-	(void)out;        /* UNUSED */
-	(void)num_pixels; /* UNUSED */
+	pixel_t value;
+	int p;
+
+	for (p = 0; p < num_pixels; p++) {
+		value = ((pixel_t *)in)[p];
+		double greyValue = value.r * 0.2989 + value.g * 0.5870 + value.b * 0.1140;
+		value.r = greyValue;
+		value.g = greyValue;
+		value.b = greyValue; 
+		((pixel_t *)out)[p] = value;
+	}
 }
 
 void filter3(uint8_t *in, uint8_t *out, int num_pixels)
 {
-	(void)in;         /* UNUSED */
-	(void)out;        /* UNUSED */
-	(void)num_pixels; /* UNUSED */
+	pixel_t value;
+	int p;
+
+	for (p = 0; p < num_pixels; p++) {
+		value = ((pixel_t *)in)[p];
+		double greyValue = value.r * 0.2989 + value.g * 0.5870 + value.b * 0.1140;
+		int isRedDominant = value.r > value.g && value.r > value.b;
+		value.r = (isRedDominant) ? value.r : greyValue;
+		value.g = (isRedDominant) ? value.g : greyValue;
+		value.b = (isRedDominant) ? value.b : greyValue; 
+		((pixel_t *)out)[p] = value;
+	}
 }
 
 void filter4(uint8_t *in, uint8_t *out, int num_pixels)
