@@ -1,4 +1,5 @@
 #include "heatmap.h"
+#include "utils.h"
 
 Heatmap::Heatmap(int w, int h)
 {
@@ -100,7 +101,7 @@ void Heatmap::printFormattedOutputCout()
     }
 }
 
-__device__ void Heatmap::printFormattedOutputDevice()
+void Heatmap::printFormattedOutputDevice()
 {
     for (int i = 0; i < width * height; i++)
     {

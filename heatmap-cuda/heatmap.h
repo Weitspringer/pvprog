@@ -7,28 +7,28 @@ using namespace std;
 
 class Heatmap
 {
+public:
     double *data;
     int width;
     int height;
 
-public:
     Heatmap(int w, int h);
 
     Heatmap(const Heatmap &copyHeatMap);
 
-    double getValue(int x, int y);
+    __host__ __device__ double getValue(int x, int y);
 
-    double getValue(pair<int, int> coordinates);
+    __host__ __device__ double getValue(pair<int, int> coordinates);
 
     __host__ __device__ void setValue(int x, int y, double value);
 
     __host__ __device__ void setValue(pair<int, int> coordinates, double value);
 
-    int getWidth();
+    __host__ __device__ int getWidth();
 
-    int getHeight();
+    __host__ __device__ int getHeight();
 
-    int getSize();
+    __host__ __device__ int getSize();
 
     __host__ __device__ pair<int, int> getCoordinatesFromIndex(int index);
 
