@@ -2,10 +2,10 @@
 
 using namespace std;
 
-__global__ void simulateRoundWithCuda(Heatmap* d_heatmap, int numberOfElements)
+__global__ void simulateRoundWithCuda(Heatmap* d_heatmap, long numberOfElements)
 {
     // Calculate position in a flattened array
-    int threadPositionFlat = blockIdx.x * blockDim.x + threadIdx.x;
+    long threadPositionFlat = blockIdx.x * blockDim.x + threadIdx.x;
     if (threadPositionFlat < numberOfElements)
     {
         pair<int, int> coordinates = d_heatmap->getCoordinatesFromIndex(threadPositionFlat);
@@ -62,10 +62,10 @@ int main(int argc, char **argv)
         cout << xy.first << ", " << xy.second << endl;
     }
 
-    int numberOfElements = heatmap.getSize();
+    long numberOfElements = heatmap.getSize();
 
-    int threadsPerBlock = 256;
-    int blocksPerGrid = (numberOfElements + threadsPerBlock - 1) / threadsPerBlock;
+    long threadsPerBlock = numberOfElements / 8;
+    long blocksPerGrid = (numberOfElements + threadsPerBlock - 1) / threadsPerBlock;
 
     // Create class storage on device and copy top level class
     Heatmap *d_heatmap;
@@ -89,6 +89,9 @@ int main(int argc, char **argv)
         pair<int, int>* activeCellsArray = &activeCellsVector[0];
         // Copy to device
         pair<int, int>* d_activeCells;
+        for (int j = 0; j < numberOfActiveCells; j++) {
+            //cout << "Round " << i << ", active cell: " << activeCellsArray[j].first << ", " << activeCellsArray[j].second << endl;
+        }
         cudaMalloc((void **)&d_activeCells, sizeof(pair<int, int>)*numberOfActiveCells);
         cudaMemcpy(d_activeCells, activeCellsArray, sizeof(pair<int, int>)*numberOfActiveCells, cudaMemcpyHostToDevice);
         updateHotspotsDevice<<<threadsPerBlock, blocksPerGrid>>>(d_heatmap, d_activeCells, numberOfActiveCells);

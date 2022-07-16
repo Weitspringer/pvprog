@@ -76,7 +76,7 @@ int Heatmap::getHeight()
     return height;
 }
 
-int Heatmap::getSize()
+long Heatmap::getSize()
 {
     return width * height;
 }

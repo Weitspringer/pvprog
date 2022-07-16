@@ -39,7 +39,7 @@ public:
 
     __host__ __device__ int getHeight();
 
-    __host__ __device__ int getSize();
+    __host__ __device__ long getSize();
 
     __host__ __device__ pair<int, int> getCoordinatesFromIndex(int index);
 
