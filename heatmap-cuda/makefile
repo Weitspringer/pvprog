@@ -24,5 +24,5 @@ utils.o: utils.cu
 heatmap.o: heatmap.cu
 	$(CC) $(CFLAGS) -c heatmap.cu -dc
 
-lifecycle.o: lifecycle.cu
-	$(CC) $(CFLAGS) -c lifecycle.cu -dc
+lifecycle.o: lifecycle.cpp
+	$(CC) $(CFLAGS) -c lifecycle.cpp -dc

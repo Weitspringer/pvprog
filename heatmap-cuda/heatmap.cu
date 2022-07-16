@@ -128,7 +128,7 @@ void Heatmap::printFormattedOutputCout()
     }
 }
 
-void Heatmap::printFormattedOutputDevice()
+__device__ void Heatmap::printFormattedOutputDevice()
 {
     for (int i = 0; i < width * height; i++)
     {
