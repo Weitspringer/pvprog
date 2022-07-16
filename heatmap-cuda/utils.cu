@@ -1,6 +1,6 @@
 #include "utils.h"
 
-void readData(string filename, Lifecycle& lifecycles)
+void readData(string filename, Lifecycle &lifecycles)
 {
     if (filename != "")
     {
@@ -40,13 +40,12 @@ void readData(string filename, Lifecycle& lifecycles)
     }
 }
 
-void readData(string filename, vector<pair<int, int>>& coords)
+void readData(string filename, vector<pair<int, int>> &coords)
 {
     if (filename != "")
     {
         bool flag_header_read = false;
 
-        
         ifstream raw_data_file(filename);
         if (raw_data_file.is_open())
         { // always check whether the file is open
@@ -70,7 +69,7 @@ void readData(string filename, vector<pair<int, int>>& coords)
                 }
                 else
                 {
-                    flag_header_read = true;    
+                    flag_header_read = true;
                 }
             }
         }
@@ -83,42 +82,56 @@ void readData(string filename, vector<pair<int, int>>& coords)
 
 double calculateFutureTemperature(Heatmap &heatmap, int x, int y)
 {
-	int width = heatmap.getWidth();
+    int width = heatmap.getWidth();
     int height = heatmap.getHeight();
 
     double sum = 0;
-	for (int i = -1; i <= 1; i++)
-	{
-		for (int j = -1; j <= 1; j++)
-		{
-			int neighbour_x = x + i;
-			int neighbour_y = y + j;
-			if (neighbour_x < 0 || neighbour_x >= width || neighbour_y < 0 || neighbour_y >= height)
-			{
-				sum += 0;
-			}
-			else
-			{
-				sum += heatmap.getValue(neighbour_x, neighbour_y);
-			}
-		}
-	}
+    for (int i = -1; i <= 1; i++)
+    {
+        for (int j = -1; j <= 1; j++)
+        {
+            int neighbour_x = x + i;
+            int neighbour_y = y + j;
+            if (neighbour_x < 0 || neighbour_x >= width || neighbour_y < 0 || neighbour_y >= height)
+            {
+                sum += 0;
+            }
+            else
+            {
+                sum += heatmap.getValue(neighbour_x, neighbour_y);
+            }
+        }
+    }
 
     double average = sum / 9;
 
     return average;
 }
 
-void updateHotspots(Heatmap& heatmap, Lifecycle& lifecycles, int currentRound)
+void updateHotspots(Heatmap &heatmap, Lifecycle &lifecycles, int currentRound)
 {
     vector<pair<int, int>> activeCells = lifecycles.getCellsByRound(currentRound);
 
-    for (auto const& cell : activeCells)
+    for (auto const &cell : activeCells)
     {
         if (cell.first < heatmap.getWidth() && cell.second < heatmap.getHeight())
         {
             heatmap.setValue(cell, 1);
-            // cout << "Hotspot set for round " << currentRound << " at " << cell.first << "," << cell.second << endl;
+            cout << "Hotspot set for round " << currentRound << " at " << cell.first << "," << cell.second << endl;
+        }
+    }
+}
+
+__global__ void updateHotspotsDevice(Heatmap *d_heatmap, pair<int, int> *activeCells, int numberOfCells)
+{
+    // Calculate position in a flattened array
+    int threadPositionFlat = blockIdx.x * blockDim.x + threadIdx.x;
+    if (threadPositionFlat < numberOfCells)
+    {   
+        pair<int, int> cell = activeCells[threadPositionFlat];
+        if (cell.first < d_heatmap->getWidth() && cell.second < d_heatmap->getHeight())
+        {
+            d_heatmap->setValue(cell, 1);
         }
     }
 }

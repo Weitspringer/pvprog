@@ -91,7 +91,7 @@ int main(int argc, char **argv)
         pair<int, int>* d_activeCells;
         cudaMalloc((void **)&d_activeCells, sizeof(pair<int, int>)*numberOfActiveCells);
         cudaMemcpy(d_activeCells, activeCellsArray, sizeof(pair<int, int>)*numberOfActiveCells, cudaMemcpyHostToDevice);
-        updateHotspotsDevice<<<1, 1>>>(d_heatmap, d_activeCells, numberOfActiveCells);
+        updateHotspotsDevice<<<threadsPerBlock, blocksPerGrid>>>(d_heatmap, d_activeCells, numberOfActiveCells);
         cudaFree(d_activeCells);
         // Run simulation kernel
         simulateRoundWithCuda<<<threadsPerBlock, blocksPerGrid>>>(d_heatmap, numberOfElements);
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
         activeCellsArray = &activeCellsVector[0];
         cudaMalloc((void **)&d_activeCells, sizeof(pair<int, int>)*numberOfActiveCells);
         cudaMemcpy(d_activeCells, activeCellsArray, sizeof(pair<int, int>)*numberOfActiveCells, cudaMemcpyHostToDevice);
-        updateHotspotsDevice<<<1, 1>>>(d_heatmap, d_activeCells, numberOfActiveCells);
+        updateHotspotsDevice<<<threadsPerBlock, blocksPerGrid>>>(d_heatmap, d_activeCells, numberOfActiveCells);
         cudaFree(d_activeCells);
     }
     
