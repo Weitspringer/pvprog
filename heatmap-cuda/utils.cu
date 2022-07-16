@@ -81,7 +81,7 @@ void readData(string filename, vector<pair<int, int>>& coords)
     }
 }
 
-__host__ __device__ double calculateFutureTemperature(Heatmap &heatmap, int x, int y)
+double calculateFutureTemperature(Heatmap &heatmap, int x, int y)
 {
 	int width = heatmap.getWidth();
     int height = heatmap.getHeight();

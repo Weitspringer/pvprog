@@ -13,6 +13,11 @@ __global__ void simulateRoundWithCuda(Heatmap* d_heatmap, int numberOfElements)
     }
 }
 
+__global__ void swapDataWithFutureData(Heatmap* d_heatmap)
+{
+    d_heatmap->overrideDataWithFutureData();
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 3)
@@ -77,10 +82,9 @@ int main(int argc, char **argv)
         cudaMemcpy(&(d_heatmap->data), &d_data, sizeof(double *), cudaMemcpyHostToDevice);
         // Run simulation kernel
         simulateRoundWithCuda<<<threadsPerBlock, blocksPerGrid>>>(d_heatmap, numberOfElements);
+        swapDataWithFutureData<<<1,1>>>(d_heatmap);
         // Copy data to host
-        cudaMemcpy(&d_futureData, &(d_heatmap->futureData), sizeof(double)*numberOfElements, cudaMemcpyDeviceToDevice);
-        cudaMemcpy(heatmap.futureData, d_futureData, sizeof(double)*numberOfElements, cudaMemcpyDeviceToHost);
-        heatmap.overrideDataWithFutureData();
+        cudaMemcpy(heatmap.data, d_futureData, sizeof(double)*numberOfElements, cudaMemcpyDeviceToHost);
         // Update of hotspots in round i+1
         updateHotspots(heatmap, lifecycles, i);
     }
