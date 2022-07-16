@@ -6,9 +6,9 @@ using namespace std;
 
 class Lifecycle
 {
+public:
     vector<pair<pair<int, int>, pair<int, int>>> data;
 
-public:
     __host__ __device__ void addValue(pair<int, int> coordinates, pair<int, int> lifespan);
 
     __host__ __device__ vector<pair<int, int>> getValuesByCoordinates(pair<int, int> coordinates);

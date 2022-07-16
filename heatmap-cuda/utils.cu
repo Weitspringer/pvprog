@@ -109,7 +109,7 @@ __host__ __device__ double calculateFutureTemperature(Heatmap &heatmap, int x, i
     return average;
 }
 
-__host__ __device__ void updateHotspots(Heatmap& heatmap, Lifecycle& lifecycles, int currentRound)
+void updateHotspots(Heatmap& heatmap, Lifecycle& lifecycles, int currentRound)
 {
     vector<pair<int, int>> activeCells = lifecycles.getCellsByRound(currentRound);
 

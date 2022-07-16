@@ -4,6 +4,7 @@
 Heatmap::Heatmap(int w, int h)
 {
     data = new double[w * h];
+    futureData = new double[w * h];
     width = w;
     height = h;
     for (int i = 0; i < w * h; i++)
@@ -15,6 +16,7 @@ Heatmap::Heatmap(int w, int h)
 Heatmap::Heatmap(const Heatmap &copyHeatMap)
 {
     data = copyHeatMap.data;
+    futureData = copyHeatMap.futureData;
     width = copyHeatMap.width;
     height = copyHeatMap.height;
 }
@@ -37,6 +39,31 @@ void Heatmap::setValue(int x, int y, double value)
 void Heatmap::setValue(pair<int, int> coordinates, double value)
 {
     setValue(coordinates.first, coordinates.second, value);
+}
+
+double Heatmap::getFutureValue(int x, int y)
+{
+    return futureData[x + y * width];
+}
+
+double Heatmap::getFutureValue(pair<int, int> coordinates)
+{
+    return getFutureValue(coordinates.first, coordinates.second);
+}
+
+void Heatmap::setFutureValue(int x, int y, double value)
+{
+    futureData[x + y * width] = value;
+}
+
+void Heatmap::setFutureValue(pair<int, int> coordinates, double value)
+{
+    setFutureValue(coordinates.first, coordinates.second, value);
+}
+
+void Heatmap::overrideDataWithFutureData()
+{
+    data = futureData;
 }
 
 int Heatmap::getWidth()
