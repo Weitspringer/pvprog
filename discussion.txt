@@ -1,0 +1,143 @@
+SETUP:
+OS: Windows 11
+Processor: AMD Ryzen 7 3700X 8-Core Processor @ 3.6GHz
+RAM: 16GB
+GPU: NVIDIA GeForce 2070S
+
+Because this is a Windows system, the measurement was rather difficult (tried xperf, nvidia-smi, AMD micro-Prof... nothing was suitable - xperf lead to BSOD).
+The final orchestration is as follows:
+- OpenHardwareMonitor constantly plotting CPU and GPU power intake (Watts) visually with a sampling frequency of 1Hz (maximum for OpenhardWareMonitor)
+	- Estimate baseline of 30W for CPU and GPU each (cross-checking GPU baseline with nvidia-smi)
+- Execute program: MeasureCommand {.\heatmap.exe 1000 1000 <numRounds> "heatmap_random_1000.csv"}
+- If heatmap is small, execute program multiple times sequentially until CPU and / or GPU power intake is noticeable on OpenHardwareMonitor
+- Visually estimate the power intake of GPU and CPU
+- Take notes in notepad, calculate manually
+
+Resulting from this method, no mean squared error is measured during the process. 
+The overall error is assumed to be rather high - notheless the results have heuristic expressiveness.
+Additionally, the power intake of the memory was not available in OpenHardwareMonitor.
+
+To improve measurement quality, no major background applications were running and highest frequency of OpenHardwareMonitor was used.
+Assumption (with heuristic validation by looking at the plots): 
+For the OMP implementation and single threaded implementation, the GPU is not relevant.
+
+Upsides: Works on Windows
+Downsides: High error, averaging, no automation
+
+FINDINGS:
+
+EDP = energy-delay product
+
+===single-openmp===
+Overall, the single threaded implementation causes a lower power intake than the 
+parallel OpenMP implementation (5-20W compared to 8-50W). However, the energy-delay product of the single threaded implementation
+is significantly higher. The OpenMP implementation is faster and causes less energy consumption overall than the single-threaded
+implementation. For one round, this difference is 32%. For 100 rounds, it is already ~168%.
+
+===openmp-cuda===
+For one simulated round, the CUDA implementation needs more time than the OpenMP implementation. This is probably due to the overhead from
+copying the data from host to the device (initialization and lifecycle-management) and vice-versa (end). At approx. 100 rounds, 
+the CUDA implementation is faster than the OpenMP implementation (needs less than 50% time). 
+Nontheless, due to the higher power intake of the GPU, the EDP of CUDA is about the same as the EDP of OpenMP.
+This changes with an increasing number of rounds:
+The speedup of CUDA trumps the higher power consumption - as a result, 
+the CUDA implementation is faster than the OpenMP implementation and has a lower EDP as well.
+
+===single-cuda===
+Analog to openmp vs. cuda, but the described "amortisation" effect occurs earlier (less rounds).
+
+The findings do not compare to all kinds of workloads - for smaller heatmaps the CUDA implementation 
+could have the highest EDP every time.
+
+In our implementation, a complex lifecycle causes more time spent on copying the
+hotspot information from host to device each round - this can also influence the results.
+Characteristics to change: Multiple heatmap sizes, more variants of lifecycles of the hotspots.
+
+PROCESSED CELLS PER WATT
+===single===
+1: 5W / 1,000,000 cells = 0,005 mW/cell
+100: 15W / 100,000,000 cells = 0,00015 mW/cell
+1000: 20W / 1,000,000,000 cells = 0,00002 mW/cell
+10000: 15W / 10,000,000,000 cells = 0,0000015 mW/cell
+
+===OpenMP===
+1: 8W / 1,000,000 cells = 0,008 mW/cell
+100: 30W / 100,000,000 cells = 0,0003 mW/cell
+1000: 50W / 1,000,000,000 cells = 0,00005 mW/cell
+10000: 40W / 10,000,000,000 cells = 0,000004 mW/cell
+
+===CUDA===
+1: 33W / 1,000,000 cells = 0,033 mW/cell
+100: 78W / 100,000,000 cells = 0,00078 mW/cell
+1000: 120W / 1,000,000,000 cells = 0,00012 mW/cell
+10000: 128W / 10,000,000,000 cells = 0,0000128 mW/cell
+
+
+NOTES FROM MEASURING:
+
+===OMP Single Threaded===
+Baseline CPU: 30W
+
+1: 0.4 Ws
+80ms
+CPU: 35W
+
+100: 76.5 Ws
+5,1s
+CPU: 45W
+
+1000: 1052.76 Ws
+52,638s
+CPU: 50W
+
+10000: 5,968.185 Ws
+397.879s
+CPU: 45W
+
+===OMP Multi-Threaded===
+Baseline CPU: 30W
+Baseline GPU: 30W
+
+Heatmap size 1: 0.304 Ws
+38ms
+CPU: 38W -> 8 W * 0.038s = 0.304 Ws
+GPU: 30W -> = 0 Ws
+
+Heatmap size 100: 28.5 Ws
+950ms
+CPU: 60W -> 30W * 0.950s = 28.5 Ws
+GPU: 30W -> 0 Ws
+
+Heatmap size 1000: 522.05 Ws
+10s 441ms
+CPU: 80W -> 50W * 10.441 = 522.05 Ws
+GPU: 30W -> 0 Ws
+
+Heatmap size 10000: 8941.2 Ws
+3m 43s 530ms
+CPU: 70W -> 40W * 223.53s = 8941.2 Ws
+GPU: 30W -> 0 Ws
+
+===CUDA===
+Baseline CPU: 30W
+Baseline GPU: 30W
+
+Heatmap size 1: 6.93 Ws
+210ms
+CPU: 38W -> 8W * 0.210s = 1.68 Ws
+GPU: 55W -> 25W * 0.210s = 5.25 Ws
+
+Heatmap size 100: 24.024 Ws
+308ms
+CPU: 43W -> 13W * 0.308s = 4.004 Ws
+GPU: 95W -> 65W * 0.308s = 20.02 Ws
+
+Heatmap size 1000: 136.8 Ws
+1s 140ms
+CPU: 45W -> 15W * 1.140s = 17.1 Ws
+GPU: 135W -> 105W * 1.140s = 119.7 Ws
+
+Heatmap size 10000: 1152 Ws
+9s
+CPU: 38W -> 8W * 9s = 72 Ws
+GPU: 150W -> 120W * 9s = 1080 Ws

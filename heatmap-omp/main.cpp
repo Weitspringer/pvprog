@@ -9,7 +9,6 @@ void simulateRound(Heatmap& heatmap)
 {
 	Heatmap futureHeatmap(heatmap.getWidth(), heatmap.getHeight());
 
-	#pragma omp parallel for
 	for (int x = 0; x < heatmap.getWidth(); x++)
 	{
 		for (int y = 0; y < heatmap.getHeight(); y++)
@@ -22,7 +21,6 @@ void simulateRound(Heatmap& heatmap)
 
 int main(int argc, char** argv)
 {
-    cout << argc;
     if (argc < 3)
     {
         cout << "Error; not enough parameters specified, continuing with default parameters!" << endl;
@@ -35,7 +33,6 @@ int main(int argc, char** argv)
     string hotspotFileName = (argc > 4) ? argv[4] : "hotspots.csv";
     string coordsFileName = (argc > 5) ? argv[5] : "";
 
-    cout << "Reading arguments";
     if (argc > 4)
     {
         fieldWidth = stoi(argv[1]);
@@ -52,7 +49,6 @@ int main(int argc, char** argv)
     Lifecycle lifecycles = Lifecycle();
     vector<pair<int, int>> coords;
 
-    cout << "Hallo!";
     readData(hotspotFileName, lifecycles);
     readData(coordsFileName, coords);
 
@@ -63,23 +59,16 @@ int main(int argc, char** argv)
     for (int i = 0; i < numberOfRounds; i++)
     {
         updateHotspots(heatmap, lifecycles, i);
-        cout << "updateHotspots in Round " << i << "/" << numberOfRounds << endl;
         simulateRound(heatmap);
-        cout << "simulateRound in Round " << i << "/" << endl;
         updateHotspots(heatmap, lifecycles, i+1);
-        cout << "updateHotspots(i+1) in Round " << i << "/" << endl;
     }
-
-    cout << "reachedOutput" << endl;
 
     if (coords.empty())
     {
-        cout << "Print all coordinates" << endl;
         heatmap.printFormattedOutput();
     }
     else
     {
-        cout << "Print selected coordinates" << endl;
         heatmap.printAtCoords(coords);
     }
 
